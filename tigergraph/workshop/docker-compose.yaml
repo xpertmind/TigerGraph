@@ -86,9 +86,11 @@ services:
       MYSQL_USER: tigergraph
       MYSQL_PASSWORD: tigergraph
     restart: on-failure
-    extra_hosts:
-      - "tg_dev_online:10.1.10.251"
-      - "google.hr:10.1.10.249"
+    healthcheck:
+        test: "/usr/bin/mysql --user=root --password=root --execute \"SHOW DATABASES;\""
+        interval: 2s
+        timeout: 20s
+        retries: 10
     networks:
       tg_net:
         ipv4_address: 10.16.33.7
