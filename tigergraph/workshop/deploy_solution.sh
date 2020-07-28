@@ -40,6 +40,7 @@ fi
 if [ ! -f docker-compose.yaml ]; then
     # download docker compose
     wget https://raw.githubusercontent.com/xpertmind/TigerGraph/master/tigergraph/workshop/docker-compose.yaml
+    sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
 fi
 
 docker-compose up -d
@@ -47,7 +48,7 @@ docker-compose up -d
 if [ "$1" == "1" ]; then
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE = $SOL_DIR/deploy.sh
-      if [ ! -f "$DEPLOY_FILE" ]; then
+      if [ ! -f $DEPLOY_FILE ]; then
           wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/workshop/fraud.zip
           unzip fraud.zip
       fi
