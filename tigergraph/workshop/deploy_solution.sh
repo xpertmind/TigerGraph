@@ -47,8 +47,8 @@ if [ "$1" == "1" ]; then
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE=$SOL_DIR"deploy.sh"
       if [ ! -f "$DEPLOY_FILE" ]; then
-          wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/workshop/fraud.zip
-          unzip fraud.zip
+        wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/fraud.zip
+        unzip fraud.zip
       fi
       docker-compose up -d
       source $SOL_DIR/deploy.sh
