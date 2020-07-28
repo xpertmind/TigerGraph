@@ -16,7 +16,7 @@ fi
 VOL_DIR="volume/"
 
 # check if all the folders are created
-if [ !-d "volume" ]; then
+if [ ! -d "volume" ]; then
   mkdir "volume"
   mkdir "volume/k_connect"
   mkdir "volume/kafka"
@@ -32,12 +32,12 @@ if [ !-d "volume" ]; then
   mkdir "volume/zookeeper/data"
   mkdir "volume/zookeeper/txns"
 fi
-if [ !-d "scripts" ]; then
+if [ ! -d "scripts" ]; then
   mkdir "scripts"
   mkdir "scripts/solutions"
 fi
 
-if [ !-f docker-compose.yaml ]; then
+if [ ! -f docker-compose.yaml ]; then
     # download docker compose
     wget https://raw.githubusercontent.com/xpertmind/TigerGraph/master/tigergraph/workshop/docker-compose.yaml
 fi
@@ -47,7 +47,7 @@ docker-compose up -d
 if [ "$1" == "1" ]; then
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE = $SOL_DIR/deploy.sh
-      if [ !-f "$DEPLOY_FILE" ]; then
+      if [ ! -f "$DEPLOY_FILE" ]; then
           wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/workshop/fraud.zip
           unzip fraud.zip
       fi
