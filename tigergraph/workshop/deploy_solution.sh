@@ -43,8 +43,6 @@ if [ ! -f docker-compose.yaml ]; then
     sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
 fi
 
-docker-compose up -d
-
 if [ "$1" == "1" ]; then
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE="{$SOL_DIR}/deploy.sh"
@@ -52,6 +50,7 @@ if [ "$1" == "1" ]; then
           wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/workshop/fraud.zip
           unzip fraud.zip
       fi
+      docker-compose up -d
       source $SOL_DIR/deploy.sh
 
 elif [ "$1" == "2" ]; then
