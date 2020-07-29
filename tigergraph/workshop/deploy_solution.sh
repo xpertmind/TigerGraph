@@ -37,6 +37,8 @@ if [ ! -d "scripts" ]; then
   mkdir "scripts/solutions"
 fi
 
+chmod -R 777 volume/
+
 if [ ! -f docker-compose.yaml ]; then
     # download docker compose
     wget https://raw.githubusercontent.com/xpertmind/TigerGraph/master/tigergraph/workshop/docker-compose.yaml
@@ -47,8 +49,8 @@ if [ "$1" == "1" ]; then
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE=$SOL_DIR"deploy.sh"
       if [ ! -f "$DEPLOY_FILE" ]; then
-        wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/fraud.zip
-        unzip fraud.zip
+          wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/fraud.zip
+          unzip fraud.zip
       fi
       docker-compose up -d
       source $SOL_DIR/deploy.sh
