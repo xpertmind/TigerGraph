@@ -42,7 +42,7 @@ chmod -R 777 volume/
 if [ ! -f docker-compose.yaml ]; then
     # download docker compose
     wget https://raw.githubusercontent.com/xpertmind/TigerGraph/master/tigergraph/workshop/docker-compose.yaml
-    sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
+    #sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
 fi
 
 if [ "$1" == "1" ]; then
