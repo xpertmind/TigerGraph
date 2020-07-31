@@ -23,10 +23,10 @@ Howto install Docker
 sudo yum update -y
 
 Amazon Linux 2:
-sudo amazon-linux-extras install docker
+sudo amazon-linux-extras install docker docker-compose
 
 Amazon Linux:
-sudo yum install docker
+sudo yum install docker docker-compose
 
 Start the service:
 sudo service docker start
