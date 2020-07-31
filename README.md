@@ -8,7 +8,7 @@ How to install:\
 wget https://bit.ly/tg_workshop -O deploy_ws.sh\
 chmod +x deploy_ws.sh\
 ./deploy_ws.sh 1\
-
+\
 Or as a single line:\
 wget https://bit.ly/tg_workshop -O deploy_ws.sh && chmod +x deploy_ws.sh && ./deploy_ws.sh 1\
 \
