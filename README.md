@@ -2,7 +2,7 @@
 
 Here you will find a script to install TigerGraph workshop with TG-Developer latest version (3.0) and the ecco system around it: MariaDB, Kafka, Zookeeper, Kafka Connect and Conda.\
 \
-Prerequisites - running docker and docker-compose, some free disk and memory.\
+Prerequisites - [running docker](https://docs.docker.com/engine/install/) and [docker-compose](https://docs.docker.com/compose/install/), some free disk and memory.\
 \
 How to install:\
 wget https://bit.ly/tg_workshop -O deploy_ws.sh\
