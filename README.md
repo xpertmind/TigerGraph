@@ -1,17 +1,22 @@
 # TigerGraph misc stuff
 
-Here you will find a script to install TigerGraph workshop with TG-Developer latest version (3.0) and the ecco system around it: MariaDB, Kafka, Zookeeper, Kafka Connect and Conda.\
-\
-Prerequisites - running docker and docker-compose, some free disk and memory.\
-\
-How to install:\
-wget https://bit.ly/tg_workshop -O deploy_ws.sh\
-chmod +x deploy_ws.sh\
-./deploy_ws.sh 1
-\
-Or as a single line:\
-wget https://bit.ly/tg_workshop -O deploy_ws.sh && chmod +x deploy_ws.sh && ./deploy_ws.sh 1\
-\
+**About**
+Here you will find a script to install TigerGraph workshop with TG-Developer latest version (3.0) and the ecosystem around it: MariaDB, Kafka, Zookeeper, Kafka Connect and Conda.
+
+**Prerequisites** - 
+1. [running docker](https://docs.docker.com/engine/install/)
+2. [docker-compose](https://docs.docker.com/compose/install/)
+3. Have available resources (some free disk and memory).
+
+**How to install**
+1. `wget https://bit.ly/tg_workshop -O deploy_ws.sh`
+2. `chmod +x deploy_ws.sh`
+3. `./deploy_ws.sh 1`
+
+**Or as a single line**
+
+`wget https://bit.ly/tg_workshop -O deploy_ws.sh && chmod +x deploy_ws.sh && ./deploy_ws.sh 1`
+
 The number (1) after the .sh script will install fraud solution. We are working on additional solutions and will upload them online as soon as they are tested.
 
 You will need Docker running on your instance.
@@ -19,7 +24,7 @@ You will need Docker running on your instance.
 Howto install Docker 
 ========================
 # on AWS
-
+```
 sudo yum update -y
 
 Amazon Linux 2:
@@ -37,9 +42,9 @@ sudo usermod -a -G docker ec2-user
 
 Check if it's working:
 docker info
-
+```
 # on Ubuntu
-
+```
 sudo apt-get update
 sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
  
@@ -73,3 +78,4 @@ sudo usermod -aG docker bruno
 docker info
 
 (log out and log in!)
+```
