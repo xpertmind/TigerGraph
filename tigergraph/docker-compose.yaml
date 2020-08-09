@@ -1,1 +1,36 @@
-docker-compose.yaml
+version: "3.8"
+services:
+  tg_dev3:
+    image: "xpertmind/tigergraph:latest_buntu"
+    container_name: tg_dev3
+    restart: unless-stopped
+    ports:
+      - '9000:9000'
+      - '22:22'
+      - '14240:14240'
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    volumes:
+      - ./data:/var/lib/tigergraph/data
+      - ./scripts:/home/tigergraph/scripts
+    stdin_open: true
+    tty: true
+    networks:
+      tg_net:
+        ipv4_address: 10.16.33.3
+
+    healthcheck:
+            test: ["CMD-SHELL", "curl --fail http://localhost:9000/echo || exit 1"]
+            interval: 5s
+            timeout: 10s
+            retries: 5
+
+networks:
+    tg_net:
+        driver: bridge
+        ipam:
+            driver: default
+            config:
+            - subnet: 10.16.33.0/28
