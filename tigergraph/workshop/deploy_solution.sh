@@ -15,8 +15,10 @@ fi
 # start docker-compose as deamon
 VOL_DIR="volume/"
 
+
 # check if all the folders are created
 if [ ! -d "volume" ]; then
+echo "--> creating needed folders ..."
   mkdir "volume"
   mkdir "volume/k_connect"
   mkdir "volume/kafka"
@@ -49,9 +51,11 @@ if [ "$1" == "1" ]; then
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE=$SOL_DIR"deploy.sh"
       if [ ! -f "$DEPLOY_FILE" ]; then
+          echo "--> downloading anti-fraud workshop data"
           wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/fraud.zip
           unzip fraud.zip
       fi
+      echo "--> starting to deploy containers:"
       docker-compose up -d
       source $SOL_DIR/deploy.sh
 
