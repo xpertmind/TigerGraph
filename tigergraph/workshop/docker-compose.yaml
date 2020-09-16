@@ -106,7 +106,9 @@ services:
       - kafka
       - mariadb
     links:
-      - mariadb:mysql
+      - mariadb:mariadb
+      - kafka:kafka
+      - zookeeper:zookeeper
     environment:
       - GROUP_ID=1
       - CONFIG_STORAGE_TOPIC=my_connect_configs
