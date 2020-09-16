@@ -64,7 +64,12 @@ elif [ "$1" == "2" ]; then
 fi
 
 docker-compose ps
-echo "Done!"
+
+echo "####"
+echo "To stop this workshop:        docker-compose stop"
+echo "To terminate this workshop:   docker-compose down"
+echo "####"
+
 # load the data depending on solution
 # 1 Fraud
 # 2 Covid-19
