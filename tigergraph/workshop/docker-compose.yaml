@@ -3,6 +3,7 @@ services:
   tg_dev3:
     image: "xpertmind/tigergraph:latest_buntu"
     container_name: tg_dev3
+    hostname: tg_dev3
     restart: unless-stopped
     ports:
       - '9000:9000'
@@ -29,6 +30,7 @@ services:
   conda:
     image: "xpertmind/tigergraph_conda"
     container_name: conda
+    hostname: conda
     ports:
       - '8888:8888'
     restart: unless-stopped
@@ -39,6 +41,7 @@ services:
   zookeeper:
     image: 'debezium/zookeeper:1.2'
     container_name: zookeeper
+    hostname: zookeeper
     ports:
       - '2181:2181'
       - '2888:2888'
@@ -55,6 +58,7 @@ services:
   kafka:
     image: 'debezium/kafka:1.2'
     container_name: kafka
+    hostname: kafka
     ports:
       - '9092:9092'
     environment:
@@ -72,6 +76,7 @@ services:
   mariadb:
     image: 'mariadb:10.5'
     container_name: mariadb
+    hostname: mariadb
     ports:
       - '3306:3306'
     volumes:
@@ -99,6 +104,7 @@ services:
   kafka_connect:
     image: 'debezium/connect:1.2'
     container_name: k_connect
+    hostname: k_connect
     ports:
       - '8083:8083'
     depends_on:
