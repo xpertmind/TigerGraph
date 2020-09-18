@@ -9,6 +9,8 @@ services:
       - '9000:9000'
       - '1022:22'
       - '14240:14240'
+    links:
+      - kafka:kafka
     ulimits:
       nofile:
         soft: 1000000
@@ -87,7 +89,7 @@ services:
     environment:
       # ALLOW_EMPTY_PASSWORD is recommended only for development.
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: tg_demo
+      MYSQL_DATABASE: tgdemo
       MYSQL_USER: tigergraph
       MYSQL_PASSWORD: tigergraph
     restart: on-failure
