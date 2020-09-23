@@ -5,7 +5,7 @@ Here you will find a script to install TigerGraph workshop with TG-Developer lat
 
 **Prerequisites** - 
 1. [running docker](https://docs.docker.com/engine/install/)
-2. [docker-compose](https://docs.docker.com/compose/install/)
+2. [docker-compose](https://docs.docker.com/compose/install/) Version > 1.25
 3. Have available resources (some free disk and memory).
 
 **How to install**
@@ -28,10 +28,10 @@ Howto install Docker
 sudo yum update -y
 
 Amazon Linux 2:
-sudo amazon-linux-extras install docker docker-compose
+sudo amazon-linux-extras install docker docker-compose unzip
 
 Amazon Linux:
-sudo yum install docker docker-compose
+sudo yum install docker docker-compose unzip
 
 Start the service:
 sudo service docker start
@@ -66,13 +66,13 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic  stable"
 
 sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose unzip
 
 (check if it's working)
 sudo docker run hello-world
 
 (add local user to the docker group!)
-sudo usermod -aG docker bruno
+sudo usermod -aG docker <YOUR LINUX USER NAME>
 
 (test withoud sudo)
 docker info
