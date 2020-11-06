@@ -17,7 +17,6 @@ VOL_DIR="volume/"
 
 if [ ! -d "scripts" ]; then
   mkdir "scripts"
-  mkdir "scripts/solutions"
 fi
 
 # Fraud solution
@@ -49,6 +48,9 @@ if [ "$1" == "1" ]; then
       wget https://raw.githubusercontent.com/xpertmind/TigerGraph/master/tigergraph/workshop/docker-compose.yaml
       #sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
   fi
+  if [ ! -d "scripts/solutions" ]; then
+    mkdir "scripts/solutions"
+  fi
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE=$SOL_DIR"deploy.sh"
       if [ ! -f "$DEPLOY_FILE" ]; then
@@ -67,7 +69,10 @@ elif [ "$1" == "2" ]; then
       wget https://raw.githubusercontent.com/xpertmind/TigerGraph/master/tigergraph/synthea-medgraph/docker-compose.yaml
       #sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
   fi
-  SOL_DIR="scripts/synthea-medgraph"
+  SOL_DIR="scripts/synthea-medgraph/"
+  if [ ! -d $SOL_DIR ]; then
+    mkdir $SOL_DIR
+  fi
   DOCKER="syntheatg3"
   DEPLOY_FILE=$SOL_DIR"deploy.sh"
   if [ ! -f "$DEPLOY_FILE" ]; then
@@ -76,7 +81,7 @@ elif [ "$1" == "2" ]; then
 #      unzip data.zip
   fi
   echo "--> starting deployment"
-  docker-compose up -d
+  #docker-compose up -d
   source $SOL_DIR/deploy.sh
 fi
 
