@@ -67,7 +67,6 @@ elif [ "$1" == "2" ]; then
   if [ ! -f docker-compose.yaml ]; then
       # download docker compose
       wget https://raw.githubusercontent.com/xpertmind/TigerGraph/master/tigergraph/synthea-medgraph/docker-compose.yaml
-      #sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
   fi
   SOL_DIR="scripts/synthea-medgraph/"
   if [ ! -d $SOL_DIR ]; then
@@ -77,8 +76,8 @@ elif [ "$1" == "2" ]; then
   DEPLOY_FILE=$SOL_DIR"deploy.sh"
   if [ ! -f "$DEPLOY_FILE" ]; then
       echo "--> downloading synthea-medgraph solution scripts & data"
-#      wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/synthea-medgraph/data.zip
-#      unzip data.zip
+      wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/synthea-medgraph/data.zip
+      unzip data.zip
   fi
   echo "--> starting deployment"
   #docker-compose up -d
