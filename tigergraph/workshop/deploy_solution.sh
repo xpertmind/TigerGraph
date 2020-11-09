@@ -76,12 +76,12 @@ elif [ "$1" == "2" ]; then
   DEPLOY_FILE=$SOL_DIR"deploy.sh"
   if [ ! -f "$DEPLOY_FILE" ]; then
       echo "--> downloading synthea-medgraph solution scripts & data"
-      wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/synthea-medgraph/data.zip
+      wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/synthea-medgraph/synthea-data.zip
       unzip data.zip
   fi
   echo "--> starting deployment"
   #docker-compose up -d
-  source $SOL_DIR/deploy.sh
+  #source $SOL_DIR/deploy.sh
 fi
 
 docker-compose ps
