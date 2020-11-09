@@ -78,7 +78,7 @@ elif [ "$1" == "2" ]; then
       echo "--> downloading synthea-medgraph solution scripts & data"
       wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/synthea-medgraph/synthea-data.zip
       unzip synthea-data.zip
-      mv TigerGraph ../../
+      mv $SOL_DIR"/TigerGraph" .
   fi
   echo "--> starting deployment"
   docker-compose up -d
