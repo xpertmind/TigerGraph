@@ -1,8 +1,25 @@
 #!/bin/bash
 
 # check parameters
+if [[ ! $(which docker) && ! $(docker --version)]]; then
+    echo "This workshop depends on Docker and docker-compose. Please install them on your system."
+    echo "Howto install Docker: https://docs.docker.com/engine/install/"
+    echo "... and docker-compose: https://docs.docker.com/compose/install/"
+    exit 2
+    # command
+fi
+
+if [[ ! $(which docker-compose) && ! $(docker-compose --version)]]; then
+    echo "This workshop depends on Docker and docker-compose (ver. > 1.24 ). Please install them on your system."
+    echo "Howto install Docker: https://docs.docker.com/engine/install/"
+    echo "... and docker-compose: https://docs.docker.com/compose/install/"
+    exit 2
+    # command
+fi
+
+
 if [ $# -lt 1 ]; then
-  echo "Error: please use the SOLUTION NUMBER argument to start the deployment"
+  echo "Error: please use a SOLUTION NUMBER argument to start the deployment"
   echo "$0 1 -> Fraud"
   echo "$0 2 -> Synthea-Medgraph"
 
@@ -14,10 +31,6 @@ fi
 
 # start docker-compose as deamon
 VOL_DIR="volume/"
-
-if [ ! -d "scripts" ]; then
-  mkdir "scripts"
-fi
 
 # Fraud solution
 if [ "$1" == "1" ]; then

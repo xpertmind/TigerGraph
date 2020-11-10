@@ -19,20 +19,9 @@ services:
       - ./TigerGraph/log:/opt/tigergraph/log
     stdin_open: true
     tty: true
-    networks:
-      tg_net_synthea:
-        ipv4_address: 10.16.49.3
 
     healthcheck:
             test: ["CMD-SHELL", "curl --fail http://localhost:9000/echo || exit 1"]
             interval: 5s
             timeout: 10s
             retries: 5
-
-networks:
-    tg_net_synthea:
-        driver: bridge
-        ipam:
-            driver: default
-            config:
-            - subnet: 10.16.49.0/28
