@@ -104,5 +104,5 @@ echo "####"
 
 # load the data depending on solution
 # 1 Fraud
-# 2 Covid-19
+# 2 Synthea-Medgraph
 # 3 tbd
