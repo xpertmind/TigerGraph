@@ -3,7 +3,7 @@
 **About**
 Here you will find a script to install different TigerGraph workshops:
 
-1 - Anti-Fraud solution with TG-Developer latest version (3.0) and the ecosystem around it: MariaDB, Kafka, Zookeeper, Kafka Connect and Conda.
+1 - Anti-Fraud solution with TG-Free Enterprise version 3.0.5 and the ecosystem around it: MariaDB, Kafka, Zookeeper, Kafka Connect and Conda.
 
 2 - Synthea-Medgraph solution
 
