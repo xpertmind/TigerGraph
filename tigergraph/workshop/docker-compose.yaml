@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   tg_dev3:
-    image: "xpertmind/tigergraph:latest_buntu"
+    image: "xpertmind/tigergraph:free_3.0.5"
     container_name: tg_dev3
     hostname: tg_dev3
     restart: unless-stopped
