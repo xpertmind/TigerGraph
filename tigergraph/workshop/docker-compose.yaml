@@ -16,7 +16,7 @@ services:
         soft: 1000000
         hard: 1000000
     volumes:
-      - ./volume/TigerGraph/data:/var/lib/tigergraph/data
+      - ./volume/TigerGraph/data:/opt/tigergraph/data
       - ./volume/TigerGraph/scripts:/home/tigergraph/scripts
     stdin_open: true
     tty: true
