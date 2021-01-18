@@ -2,7 +2,9 @@
 
 **About**
 Here you will find a script to install different TigerGraph workshops:
-1 - Anti-Fraud solution with TG-Developer latest version (3.0) and the ecosystem around it: MariaDB, Kafka, Zookeeper, Kafka Connect and Conda.
+
+1 - Anti-Fraud solution with TG-Free Enterprise version 3.0.5 and the ecosystem around it: MariaDB, Kafka, Zookeeper, Kafka Connect and Conda.
+
 2 - Synthea-Medgraph solution
 
 **Prerequisites** - 
@@ -11,13 +13,13 @@ Here you will find a script to install different TigerGraph workshops:
 3. Have available resources (some free disk and memory).
 
 **How to install**
-1. `wget https://bit.ly/tigergraph_ws -O deploy_ws.sh`
+1. `wget https://bit.ly/TG_WS -O deploy_ws.sh`
 2. `chmod +x deploy_ws.sh`
 3. `./deploy_ws.sh <NUMBER>` i.e `./deploy_ws.sh 2`
 
 **Or as a single line**
 
-`wget https://bit.ly/tigergraph_ws -O deploy_ws.sh && chmod +x deploy_ws.sh && ./deploy_ws.sh 2`
+`wget https://bit.ly/TG_WS -O deploy_ws.sh && chmod +x deploy_ws.sh && ./deploy_ws.sh 2`
 
 The number (1) after the .sh script will install fraud solution. We are working on additional solutions and will upload them online as soon as they are tested.
 
