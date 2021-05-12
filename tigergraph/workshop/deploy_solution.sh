@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# check parameters
+# check some stuff before starting
 if [[ ! $(which docker) && ! $(docker --version) ]]; then
   echo "This workshop depends on Docker and docker-compose. Please install them on your system."
   echo "Howto install Docker: https://docs.docker.com/engine/install"
@@ -17,9 +17,15 @@ fi
 
 
 if [ $# -lt 1 ]; then
-  echo "Error: please use a SOLUTION NUMBER argument to start the deployment"
   echo "$0 1 -> Fraud"
   echo "$0 2 -> Synthea-Medgraph"
+  get_tgport_number()
+  read -p 'Enter solution number: ' solnumber
+  if [ -z "$solnumber" ]
+	then
+    echo "Error: please use a SOLUTION NUMBER argument to start the deployment"
+	  exit 2
+	fi
 
   exit 2
 elif [ $# -gt 1 ]; then
@@ -27,8 +33,36 @@ elif [ $# -gt 1 ]; then
   exit 2
 fi
 
-# start docker-compose as deamon
+# define some default variables
 VOL_DIR="volume/"
+TG_GUI_PORT=14240
+TG_API_PORT=9000
+TG_SSH_PORT=22
+
+# functions for dynamic setup
+function get_tggui_port() {
+#! /bin/bash
+#Prompt user to insert inputs (one at a time)
+read -p 'Enter TigerGraph GUI port [14240]: ' tg_gui_port
+
+#Firstly Validate if any input field is left blank
+#If an input field is left blank, display appropriate message and stop execution of script
+if [ -z "$tg_gui_port" ]
+then
+	$tg_gui_port = $1
+fi
+
+#Now Validate if the user input is a number (Integer or Float)
+#If an input field not a number, display appropriate message and stop execution of script
+if ! [[ "$tg_gui_port" =~ ^[+-]?[0-9]+\.?[0-9]*$ ]]
+    then
+        echo "Please enter a number between 80 and 65535"
+		get_tggui_port($tg_gui_port)
+fi
+}
+
+
+
 
 # Fraud solution
 if [ "$1" == "1" ]; then
@@ -60,15 +94,15 @@ if [ "$1" == "1" ]; then
       #sed -i '' 's/10.16.33/10.116.133/' docker-compose.yaml
   fi
   if [ ! -d "scripts/solutions" ]; then
-    mkdir "scripts/solutions"
+    mkdir -p "scripts/solutions"
   fi
       SOL_DIR="scripts/solutions/fraud/"
       DEPLOY_FILE=$SOL_DIR"deploy.sh"
       if [ ! -f "$DEPLOY_FILE" ]; then
           echo "--> downloading anti-fraud workshop data"
           wget https://github.com/xpertmind/TigerGraph/raw/master/tigergraph/workshop/fraud.zip
-          unzip fraud.zip
       fi
+      unzip fraud.zip
       echo "--> starting to deploy containers:"
       docker-compose up -d
       source $SOL_DIR/deploy.sh
@@ -103,6 +137,8 @@ echo "####"
 echo "To stop this workshop:        docker-compose stop"
 echo "To terminate this workshop:   docker-compose down"
 echo "####"
+
+
 
 # load the data depending on solution
 # 1 Fraud
