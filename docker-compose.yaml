@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   tg3:
-    image: "xpertmind/tigergraph:3.3.0"
+    image: "xpertmind/tigergraph:latest"
     container_name: tg3
     restart: unless-stopped
     ports:
