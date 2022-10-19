@@ -1,0 +1,1 @@
+This repository moved to https://github.com/xpertmind/TigerGraph/blob/master/FOI_Workshop_20221017/foi_workshop.ipynb
