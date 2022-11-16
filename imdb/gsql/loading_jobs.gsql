@@ -1,0 +1,51 @@
+USE GRAPH imdb
+DROP JOB ALL
+
+CREATE LOADING JOB load_job_imdb_csv FOR GRAPH imdb {
+      DEFINE FILENAME Titles="/home/tigergraph/scripts/imdb/Titles.csv";
+      DEFINE FILENAME Titles_genres="/home/tigergraph/scripts/imdb/Title_genres.csv";
+      DEFINE FILENAME Titles_ratings="/home/tigergraph/scripts/imdb/Title_ratings.csv";
+      DEFINE FILENAME Names="/home/tigergraph/scripts/imdb/Names_.csv";
+      DEFINE FILENAME Names_worked_as="/home/tigergraph/scripts/imdb/Name_worked_as.csv";
+      DEFINE FILENAME Known_for="/home/tigergraph/scripts/imdb/Known_for.csv";
+      DEFINE FILENAME Had_role="/home/tigergraph/scripts/imdb/Had_role.csv";
+      DEFINE FILENAME Directors="/home/tigergraph/scripts/imdb/Directors.csv";
+      DEFINE FILENAME Writers="/home/tigergraph/scripts/imdb/Writers.csv";
+      DEFINE FILENAME Principals="/home/tigergraph/scripts/imdb/Principals.csv";
+      DEFINE FILENAME Aliases="/home/tigergraph/scripts/imdb/Aliases.csv";
+      DEFINE FILENAME Alias_types="/home/tigergraph/scripts/imdb/Alias_types.csv";
+      DEFINE FILENAME Alias_attributes="/home/tigergraph/scripts/imdb/Alias_attributes.csv";
+      DEFINE FILENAME Episode_belongs_to="/home/tigergraph/scripts/imdb/Episode_belongs_to.csv";
+
+      LOAD Titles TO VERTEX titles VALUES($0, $2, $3, $4,$7) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Titles TO EDGE title_type VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Titles TO EDGE start_year VALUES($0, $5) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Titles TO EDGE end_year VALUES($0, $6) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Titles_genres TO EDGE title_genres VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Titles_ratings TO VERTEX ratings VALUES($1, $2) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Titles_ratings TO EDGE title_rating VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Names TO VERTEX names_ VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Names TO EDGE birth_year VALUES($0, $2) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Names TO EDGE death_year VALUES($0, $3) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Names_worked_as TO EDGE worked_as VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Known_for TO EDGE known_for VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Had_role TO EDGE had_role VALUES($1, $0, $2) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Directors TO EDGE directors_name VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Writers TO EDGE writers_name VALUES($0, $1) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Principals TO EDGE principals VALUES($0, $2, $1, $3, $4) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Aliases TO VERTEX aliases VALUES(gsql_concat($0,"_",$3, "_",$4), $2, $1, $3, $4, $5) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Aliases TO EDGE title_aliases VALUES($0, gsql_concat($0,"_",$3, "_",$4)) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Alias_attributes TO EDGE alias_attributes VALUES($0, $2) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+      LOAD Alias_types TO EDGE alias_type VALUES($0, $2) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+      LOAD Episode_belongs_to TO EDGE episodes VALUES($1, $0, $2, $3) USING SEPARATOR="\t", HEADER="true", EOL="\n", QUOTE="double";
+
+    }
+RUN LOADING JOB load_job_imdb_csv

@@ -1,0 +1,73 @@
+SET exit_on_error = TRUE
+DROP ALL
+
+CREATE VERTEX titles(PRIMARY_ID title_id STRING,
+    primary_title STRING,
+    original_title STRING,
+    is_adult BOOL,
+    runtime_minutes UINT) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE VERTEX types(
+    PRIMARY_ID type_ STRING ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE title_type(FROM titles, TO types)
+CREATE UNdirected EDGE alias_type(FROM titles, TO types)
+
+CREATE VERTEX years(
+    PRIMARY_ID year UINT ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE start_year(FROM titles, TO years)
+CREATE UNdirected EDGE end_year(FROM titles, TO years)
+
+CREATE VERTEX genres(
+    PRIMARY_ID genre STRING  ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE title_genres(FROM titles, TO genres)
+
+CREATE VERTEX names_(
+    PRIMARY_ID name_id STRING ,
+    name_ STRING ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE birth_year(FROM names_, TO years)
+CREATE UNdirected EDGE death_year(FROM names_, TO years)
+
+CREATE UNdirected EDGE writers_name(FROM names_, TO titles)
+CREATE UNdirected EDGE known_for(FROM names_, TO titles)
+CREATE UNdirected EDGE had_role(FROM names_, TO titles, role_ STRING)
+CREATE UNdirected EDGE directors_name(FROM names_, TO titles)
+
+CREATE directed EDGE episodes(FROM titles, TO titles, season_number UINT, episode_number UINT) with REVERSE_EDGE="rev_episodes"
+CREATE UNdirected EDGE principals(FROM titles, TO names_, ordering UINT, job_category STRING, job_ STRING)
+
+CREATE VERTEX professions(
+    PRIMARY_ID  profession STRING ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE worked_as(FROM names_, TO professions)
+
+CREATE VERTEX aliases(
+    PRIMARY_ID alias_id STRING,
+    title STRING,
+    ordering UINT,
+    region STRING,
+    language STRING,
+    is_original_title BOOL ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE title_aliases(FROM titles, TO aliases)
+
+CREATE VERTEX attributes(
+    PRIMARY_ID attribute_ STRING ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE alias_attributes(FROM titles, TO attributes)
+
+CREATE VERTEX ratings(
+    PRIMARY_ID avg_rating FLOAT,
+    num_votes UINT ) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+CREATE UNdirected EDGE title_rating(FROM titles, TO ratings)
+
+CREATE GRAPH imdb(*)
+
+CREATE GLOBAL SCHEMA_CHANGE job add_indexes
+{
+  ALTER VERTEX names_ ADD INDEX idx_name_id ON (name_id);
+};

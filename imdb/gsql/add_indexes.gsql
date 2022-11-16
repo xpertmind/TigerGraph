@@ -1,0 +1,6 @@
+USE GRAPH imdb
+CREATE GLOBAL SCHEMA_CHANGE JOB add_indexes
+{
+  ALTER VERTEX names_ ADD INDEX idx_name_id ON (name_id);
+}
+RUN SCHEMA_CHANGE JOB add_indexes

@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  tgroche:
+    image: "xpertmind/tigergraph:3.4.0"
+    container_name: tg3imdb
+    hostname: tg3imdb
+    restart: unless-stopped
+    ports:
+      - "9010:9000"
+      - "14250:14240"
+    ulimits:
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    volumes:
+      - ./TigerGraph/data:/opt/tigergraph/data:delegated
+      - ./TigerGraph/scripts:/home/tigergraph/scripts:cached
+    stdin_open: true
+    tty: true
+
+    healthcheck:
+            test: curl -f http://localhost:9000/echo
+            interval: 5s
+            timeout: 10s
+            retries: 5
