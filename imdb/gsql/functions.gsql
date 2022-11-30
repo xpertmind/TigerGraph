@@ -1,0 +1,105 @@
+CREATE QUERY happen_in_year(vertex<years> year) FOR GRAPH imdb {
+  MapAccum<String, INT> @@eventInYear;
+
+  print year;
+
+  start = {year};
+
+  events = SELECT p
+            FROM start:s -(ANY:e)- :p
+            ACCUM @@eventInYear += (e.type -> 1);
+
+  print @@eventInYear;
+}
+
+CREATE QUERY one_hop(vertex source) FOR GRAPH imdb {
+  // tt0058836
+  // tt0212699
+  // nm0000113
+
+  SetAccum <VERTEX> @@all_vertices;
+  SetAccum <EDGE> @@all_edges;
+
+  start = {source};
+
+  result = SELECT p
+            FROM start:s -(:e)- :p
+            ACCUM @@all_edges += e;
+
+  PRINT result, @@all_edges;
+}
+
+CREATE QUERY one_hop_titles(vertex<titles> title) FOR GRAPH imdb {
+  // tt0058836
+  // tt0212699
+  //
+
+  SetAccum <VERTEX> @@all_vertices;
+  SetAccum <EDGE> @@all_edges;
+
+  start = {title};
+
+  result = SELECT p
+            FROM start:s -(:e)- :p
+            ACCUM @@all_edges += e;
+
+  PRINT result, @@all_edges;
+  }
+
+CREATE QUERY jaccard_nbor_ss (VERTEX source, INT topK) FOR GRAPH imdb {
+/* This query calculates the Jaccard Similarity between a given vertex and every other vertex.
+Jaccard similarity = intersection_size / (size_A + size_B - intersection_size)
+1. The JSON and FILE version keeps the top k pairs of vertices. The result in FILE version is not in order.
+2. The Attribute version insert edges between the pairs, with the score as an edge attribute.
+   A similarity edge with one FLOAT attribute in the schema is required for this version.
+*/
+  // Titles:
+  // tt0181852
+  // tt0102585
+  // tt0102609
+
+  // Names
+  // nm0000018
+  // nm0000033
+  // nm0000113
+  // nm0000123
+  // nm0000122
+
+        SumAccum<INT> @intersection_size, @@set_size_A, @set_size_B;
+        SumAccum<FLOAT> @similarity;
+
+        Start (ANY) = {source};
+        Start = SELECT s
+        	FROM Start:s
+                ACCUM @@set_size_A += s.outdegree();
+
+        Subjects = SELECT t
+                   FROM Start:s-(:e)-:t;
+
+        Others = SELECT t
+                 FROM Subjects:s -(:e)- :t
+                 WHERE t != source
+                 ACCUM t.@intersection_size += 1,
+                       t.@set_size_B = t.outdegree()
+                 POST-ACCUM t.@similarity = t.@intersection_size*1.0/(@@set_size_A + t.@set_size_B - t.@intersection_size)
+                 ORDER BY t.@similarity DESC
+                 LIMIT topK;
+
+        PRINT source, Others;
+}
+
+CREATE QUERY one_hop_for_year(vertex<years> year) FOR GRAPH imdb {
+
+  SetAccum <VERTEX> @@all_vertices;
+  SetAccum <STRING> @@all_names;
+  SetAccum <EDGE> @@all_edges;
+
+  start = {year};
+
+  result = SELECT p
+            FROM start:s - (birth_year:e) - :p
+            ACCUM @@all_edges += e
+            POST-ACCUM @@all_names += p.name_;
+
+  PRINT @@all_names;
+  }
