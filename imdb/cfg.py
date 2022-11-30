@@ -1,7 +1,7 @@
 host = "https://biodata.i.tgcloud.io/"
-graphname = "SemMedDB"
+graphname = "yourgraph"
 username = "tigergraph"
-password = "password007"
+password = "tigergraphPass"
 gsqlversion = "3.1.5"
 usecert = True
 secret = "1een4po9ee3kk7r4j6ja83ko4bbsh9b2"
