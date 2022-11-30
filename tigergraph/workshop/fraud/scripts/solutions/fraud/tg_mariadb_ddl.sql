@@ -1,0 +1,12 @@
+DROP DATABASE IF EXISTS tgdemo;
+CREATE DATABASE tgdemo;
+use tgdemo;
+SET NAMES utf8;
+DROP TABLE IF EXISTS customer;
+CREATE TABLE customer (id int NOT NULL AUTO_INCREMENT, name varchar(100) NOT NULL, gender varchar(1), birthday datetime, active tinyint(1) DEFAULT 1, email varchar(100), code varchar(16), PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_general_ci;
+DROP TABLE  IF EXISTS merchant;
+CREATE TABLE merchant (id int NOT NULL AUTO_INCREMENT, name varchar(100) NOT NULL, category VARCHAR(30), url varchar(100) NOT NULL, address varchar(100), active tinyint(1) DEFAULT 1, code varchar(16), PRIMARY KEY (id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_general_ci;
+DROP TABLE  IF EXISTS transaction;
+CREATE TABLE transaction (trans_id int NOT NULL AUTO_INCREMENT, date datetime NOT NULL, type varchar(30) NOT NULL, customer varchar(16), merchant varchar(16), source int NOT NULL, target int NOT NULL, amount decimal(9,2) NOT NULL, isfraud tinyint(1) DEFAULT 0 NOT NULL, PRIMARY KEY (trans_id), INDEX transaction_fk1 (type), INDEX transaction_fk_cust (source), INDEX transaction_fk_merc (target)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_general_ci;
+DROP TABLE  IF EXISTS category;
+CREATE TABLE category (cat_id int NOT NULL AUTO_INCREMENT, id VARCHAR(30), num_frauds INT, num_trans INT, PRIMARY KEY (cat_id));

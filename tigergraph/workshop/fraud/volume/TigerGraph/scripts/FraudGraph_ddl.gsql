@@ -1,0 +1,35 @@
+SET exit_on_error = FALSE
+DROP ALL
+
+// =========================================================================
+// VertexTypes
+
+CREATE VERTEX customer(PRIMARY_ID id STRING, name STRING, active BOOL, email STRING, birthday STRING, age INT, gender STRING, num_frauds INT, average_purchase DOUBLE, stddev_purchase DOUBLE, num_trans INT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true"
+CREATE VERTEX merchant(PRIMARY_ID id STRING, category STRING, num_frauds INT, num_trans INT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true"
+CREATE VERTEX transaction(PRIMARY_ID id STRING, amount DOUBLE, fraud INT, step INT, prev_frauds_cust INT, prev_frauds_merch INT, prev_frauds_cat INT, rank_fraud DOUBLE, dist_fraud INT, prev_trans_cat INT, prev_trans_merch INT, prev_trans_cust INT, prev_sum_cat DOUBLE, prev_sum_merch DOUBLE, prev_sum_cust DOUBLE, prev_max_cat DOUBLE, prev_max_merch DOUBLE, prev_max_cust DOUBLE) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true"
+CREATE VERTEX category(PRIMARY_ID id STRING, num_frauds INT, num_trans INT) WITH STATS="OUTDEGREE_BY_EDGETYPE", PRIMARY_ID_AS_ATTRIBUTE="true"
+CREATE VERTEX global_stats(PRIMARY_ID id STRING, num_trans INT, num_frauds INT) WITH STATS="OUTDEGREE_BY_EDGETYPE"
+
+// =========================================================================
+// EdgeTypes
+
+CREATE UNDIRECTED EDGE customer2transaction(FROM customer, TO transaction)
+CREATE UNDIRECTED EDGE transaction2category(FROM transaction, TO category)
+CREATE UNDIRECTED EDGE transaction2merchant(FROM transaction, TO merchant)
+CREATE UNDIRECTED EDGE customer_with_merchant(FROM customer, TO merchant, map_period_to_num_t MAP<INT, INT>)
+CREATE UNDIRECTED EDGE customer_with_customer(FROM customer, TO customer, map_period_to_weight MAP<INT, DOUBLE>)
+
+// =========================================================================
+// Graph
+
+CREATE GRAPH FraudGraph(*)
+
+USE GRAPH FraudGraph
+
+CREATE GLOBAL SCHEMA_CHANGE JOB global_schema_change_1Cbv2XOzG8 {
+      ALTER VERTEX transaction ADD INDEX step_3788cfpchpq ON (step);
+}
+
+RUN GLOBAL SCHEMA_CHANGE JOB global_schema_change_1Cbv2XOzG8
+
+// EOF

@@ -1,0 +1,6 @@
+[mariadb]
+server-id         = 201311 #needed for connector!
+log_bin           = mysql-bin
+binlog_format     = ROW
+binlog_row_image  = FULL
+expire_logs_days  = 10 

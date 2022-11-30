@@ -1,0 +1,565 @@
+   TigerGraph
+   Software Subscription Agreement
+   Enterprise, Enterprise Evaluation, and Developer Edition License Agreement
+PLEASE READ THESE TERMS AND CONDITIONS (THIS "AGREEMENT") CAREFULLY BEFORE
+DOWNLOADING OR USING THE SOFTWARE ACCOMPANYING THIS AGREEMENT. BY USING THE
+SOFTWARE OR BY CLICKING A BUTTON MARKED "I ACCEPT" OR SOMETHING SIMILAR, YOU
+AGREE TO USE THE SOFTWARE SOLELY IN ACCORDANCE WITH THE TERMS AND CONDITIONS
+OF THIS AGREEMENT, AND YOU AGREE THAT YOU HAVE READ, UNDERSTOOD, ARE BOUND
+BY, AND ARE A PARTY TO THIS AGREEMENT WITH GRAPHSQL, INC., DBA TIGERGRAPH
+(TIGERGRAPH). YOU WARRANT THAT YOU ARE AT LEAST EIGHTEEN YEARS OLD AND THAT
+YOU HAVE THE LEGAL CAPACITY TO ENTER INTO CONTRACTS. IF YOU ARE ENTERING INTO
+THIS AGREEMENT ON BEHALF OF A COMPANY, ORGANIZATION, OR OTHER ENTITY, THEN
+(A) "YOU" AS USED HEREIN ADDITIONALLY REFERS TO THAT COMPANY, ORGANIZATION,
+OR ENTITY; AND (B) YOU REPRESENT AND WARRANT THAT YOU HAVE THE AUTHORITY TO
+BIND SUCH COMPANY, ORGANIZATION, OR ENTITY TO THE TERMS AND CONDITIONS SET
+FORTH HEREIN. "YOUR" and "Customer" MEANS YOU.
+YOUR USE OF THE SOFTWARE IS EXPRESSLY CONDITIONED ON YOUR ACCEPTANCE OF THE
+TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THE TERMS AND
+CONDITIONS OF THIS AGREEMENT, YOU MAY NOT INSTALL OR USE THE SOFTWARE.
+
+1. Definitions.
+
+a.  "Documentation" means TigerGraph's user information for the Licensed
+Software located at: https://docs.tigergraph.com/.
+
+b.  "Licensed Software" means TigerGraph's proprietary software program(s) in
+object code only and Software Updates made available by TigerGraph under this
+Agreement.
+
+c. "Intellectual Property Rights" means patent, copyright, trade secret,
+trademark, or other similar intellectual property rights of any kind or
+nature arising under the laws of any jurisdiction, including any so-called
+"moral rights"
+
+d. "Software Update" means new versions of, fixes or patches to, or
+configuration data changes for, the Licensed Software and Third-Party
+Software that TigerGraph generally provides to its customers under Support
+and Maintenance Services agreements.
+
+e. "Order Document" or "Order" or "SOW" means an order on the TigerGraph form
+of provisioning  document that is submitted by or on behalf of Customer and
+executed by or on behalf of the parties referencing this Agreement and that
+specifies the Software and/or Services ordered by Customer, as well as the
+specific terms and conditions for that particular transaction. document that
+is submitted by or on behalf of Customer and executed by or on behalf of the
+parties referencing this Agreement and that specifies the Software and/or
+Services ordered by Customer, as well as the specific terms and conditions
+for that particular transaction.
+
+f. "Services" means those services, including Support and Professional
+Services, which may be provided to Customer by TigerGraph pursuant to the
+terms of this Agreement and are expressly limited to those services directly
+related to Customer's use of the Software, and expressly exclude any other
+services.
+
+g. "Subscription Term" means the fixed term, of not less than one (1) year,
+designated in an Order Document beginning on the Effective Date and ending at
+the end of the period stated therein.  If no expiration date is specified in
+an Order Document, the Subscription Term shall be a one (1) year period
+("Minimum Subscription Term").  A "Subscription" is the binding,
+non-cancelable contract for the use of the Software for the Subscription Term
+as set forth in an Order Document. For Clarity, this term does not apply to
+evaluation licenses.
+
+h. "Support" means the support and maintenance services, including any
+updates, patches, enhancements and bug fixes for the Software that may be
+provided to Customer by TigerGraph pursuant to the terms of this Agreement.
+
+i.  "Authorized User" means Your employees and consultants who are authorized
+to use Licensed Software on Your behalf subject to restrictions in this
+Agreement.
+
+j. "Graph Size" means the total number of bytes in Your graph database to
+support and be used by, at any one time, an Authorized User.
+
+2. Orders, Delivery, Support
+
+a. Delivery.  For an Enterprise License, TigerGraph will promptly Deliver the
+Software for electronic download and any applicable license key after it
+accepts an Order and Customer issues a purchase order referencing such Order.
+Unless otherwise stated in an Order, Customer is solely responsible for
+installing Software on Customer's own computer equipment. In some instances,
+Customer's purchasing relationship exists solely between Customer and an
+authorized reseller of TigerGraph's Software and Services (a "Reseller"), in
+which case Section 7a - 7c (Fees and Payment) will be inapplicable to such
+Order(s), and the Reseller shall be responsible for submitting Orders and the
+appropriate payment method therewith to TigerGraph. An Order is not binding
+until TigerGraph accepts the Order. For an Enterprise Evaluation License or
+Developer Edition License, TigerGraph will promptly Deliver the Software and
+any applicable license key after Customer satisfies the registration and
+qualification procedures.
+
+b. Support. TigerGraph will use commercially reasonable efforts to provide
+Support to Customer in accordance with TigerGraph's then-current terms and
+conditions set forth at TigerGraph Support Terms and Conditions at the
+support tier stated in the applicable Order. The Support terms and conditions
+are subject to change at TigerGraph's discretion; however, TigerGraph will
+not materially reduce the level of Support during a Subscription Term for
+which Fees have been paid. 
+
+3. License and Restrictions.  
+
+a. The Licensed Software is made available either under a Developer License,
+an Enterprise Evaluation License, or an Enterprise License, each with its own
+Special Conditions.
+
+b. Enterprise Evaluation License.  Subject to Your performance under this
+Agreement, TigerGraph grants to You a limited, nonexclusive, non-transferable
+license (without the right to sublicense) for 30 days, or for another
+duration agreed to in writing by TigerGraph and You, beginning from the date
+the Evaluation Edition of the Licensed Software is made available to You (the
+Term) to copy and use the Documentation and install and use the Licensed
+Software solely in object code form on compatible (in accordance with the
+hardware, operating system, and other instructions provided by TigerGraph)
+devices owned or controlled by You, solely for Your internal evaluation of
+the software. At no time may You use the Licensed Software in the operation
+of any business. You may not (and may not permit any third party to) use any
+Licensed Software for any benchmarking purposes, or for application service
+provider, timesharing or service bureau purposes, or any purpose other than
+Your own internal evaluation as contemplated by this Agreement. TigerGraph
+may offer to extend the Term at its discretion. By using the Licensed
+Software beyond the original Term, you agree to the conditions of this
+Agreement for the new Term.
+
+c. Developer Edition License.  Subject to Your performance under this
+Agreement, TigerGraph grants to You a limited, nonexclusive, non-transferable
+license (without the right to sublicense) to copy and use the Documentation
+and install and use the Developer Edition of the Licensed Software solely in
+object code form on compatible (in accordance with the hardware, operating
+system, and other instructions provided by TigerGraph) devices owned or
+controlled by You, solely for Your internal evaluation of the software. The
+Term commences when You install or use the Licensed Software and ends when
+either party chooses to Terminate the Agreement, according to Section 4.b. At
+no time may You use the Licensed Software in the operation of any business.
+You may not (and may not permit any third party to) use any Licensed Software
+for any benchmarking purposes, or for application service provider,
+timesharing or service bureau purposes, or any purpose other than Your own
+internal evaluation as contemplated by this Agreement.  Granting Developer
+Edition licenses is solely at TigerGraph's discretion, and providing one
+version of the Software on a Developer Edition basis does not indicate that
+TigerGraph will provide another version of the Software on a similar basis or
+make available any updates or upgrades, including those necessary for data
+security.  
+
+d. Important Note for Enterprise Edition Customers.  Developer Edition
+licenses are ineligible for Support, and Developer Edition Software may not
+be used, directly or indirectly, in connection with any Software licenses
+that are eligible for Support.  If Customer purchases an Enterprise Edition
+license, it will discontinue and/or refrain from any use of the Developer
+Edition Software and may request Enterprise Evaluation License(s) for
+evaluation purposes.
+Notwithstanding anything in this agreement to the contrary, TigerGraph will
+have no warranty, indemnity, support or service level obligation with respect
+to any Enterprise Evaluation or Developer Edition licenses.
+
+e. Enterprise License.  Subject to Your performance under this Agreement and
+the payment of License Fees, TigerGraph grants to You a limited,
+nonexclusive, non-transferable license (without the right to sublicense) to
+copy and use the Documentation and install and use the Enterprise Edition of
+the Licensed Software solely in object code form on compatible (in accordance
+with the hardware, operating system, and other instructions provided by
+TigerGraph) devices owned or controlled by You.  The Term and other
+restriction and limitations shall be stated in the accompanying Order.
+
+f. General Restrictions.  You may not (and may not permit or encourage any
+third party to) reproduce, distribute, prepare derivative works of, publicly
+display, or publicly perform the Licensed Software in whole or in part, or
+use for or provide the Licensed Software to any third party or use the
+Licensed Software on behalf of any third party.  Except, and solely to the
+extent that such a restriction is impermissible under applicable law or
+applicable third party license, You may not (and may not permit any third
+party to) (a) reverse engineer, decompile, disassemble or otherwise attempt
+to discover the source code, object code or underlying structure, ideas or
+algorithms of the Licensed Software or any other application, software,
+documentation or data related to the Licensed Software, or any portion
+thereof; or (b) interfere with or circumvent any feature of the Licensed
+Software, including, without limitation, any license key designed to monitor
+Your compliance with this Agreement; (c) assign, sell, lease, license,
+sublicense, or otherwise transfer or attempt to transfer rights to the
+Licensed Software; (d) use any Licensed Software other than in accordance
+with this Agreement and in compliance with all applicable laws and
+regulations (including but not limited to any applicable privacy, data
+protection and intellectual property laws) or (e) alter or remove any
+copyright, trademark, patent or other proprietary rights notices or labels
+that appear on or in the Licensed Software.  You must uninstall and delete
+the Licensed Software following termination or expiration of this Agreement. 
+You acknowledge that the Licensed Software may contain an automatic
+termination feature that renders such Licensed Software non-functional at the
+end of the Term. 
+
+g. Ownership. TigerGraph alone (and its licensors, where applicable) will
+retain all intellectual property rights relating to the Licensed Software,
+and all enhancements, derivatives and modifications thereof, and any
+suggestions, ideas, enhancement requests, feedback, recommendations or other
+information provided by You or any third party relating to the Licensed
+Software, including all applicable Intellectual Property Rights therein, are
+all assigned to TigerGraph.  You shall retain ownership of all Your
+Confidential Information and data that You use with the Licensed Software,
+and no rights to Your Confidential Information or data are transferred or
+assigned to TigerGraph, except to use the data solely in performance of
+services under this agreement (Your Data). The Licensed Software is licensed
+only, and nothing in this Agreement shall be interpreted or construed as a
+transfer or sale of TigerGraph's ownership rights in the Licensed Software.
+Neither party shall challenge the other's Intellectual Property Rights. You
+shall not challenge or cause any third party to challenge the validity or
+enforceability of TigerGraph's Intellectual Property Rights.
+
+4. Confidentiality.  
+
+a. "Confidential Information" of a party means any confidential or
+proprietary knowledge, information, materials, or trade secrets in which such
+party has rights, disclosed to the other party ("Receiving Party"), and which
+either party would reasonably expect or consider confidential or proprietary
+information, including but not limited to, information regarding business
+methods, products, services, finances, customers and potential customers,
+suppliers, pricing and rates, costs, expenses, marketing, technologies,
+properties, specifications, personnel, or organization, in various media,
+including but not limited to, oral, written, and electronic data form. 
+TigerGraph's Confidential Information includes all Licensed Software,
+Documentation, and any other technical information related thereto.
+  
+b. Confidentiality.  During the Term and continuing until such time
+Confidential Information becomes subject to an exception in Section 3.e, each
+Receiving Party:  (i) shall treat as strictly confidential all Confidential
+Information disclosed by the other party (the "Disclosing Party"); (ii) shall
+not disclose, disseminate, distribute, or transfer such Confidential
+Information to any third party other than Receiving Party's personnel with a
+need to know such information for this Agreement and who are bound by written
+obligations of confidentiality no less restrictive than the terms of this
+Agreement without  written consent of Disclosing Party; (iii) shall not use
+such Confidential Information except solely for its performance under this
+Agreement; and (iv) shall protect the Confidential Information by using at
+least the same care as the Receiving Party uses to protect its own
+confidential information of like nature to prevent any unauthorized access,
+use, dissemination, or publication of such Confidential Information, but in
+no event less than reasonable care.  The Receiving Party shall promptly
+notify the Disclosing Party in writing if it learns of any unauthorized
+access, use, dissemination, or publication of such Confidential Information.
+
+c. Compelled Disclosure.  Upon prior written notice (to the extent legally
+permissible) to the Disclosing Party, the Receiving Party may disclose
+Disclosing Party's Confidential Information to the extent:  (i) required by
+law or regulation to be disclosed; or (ii) required by order of a court or
+other governmental body.  The Receiving Party agrees to assist the Disclosing
+Party (at the Disclosing Party's expense) in all proper ways to limit or
+prevent the disclosure of such Confidential Information, and to obtain
+confidential treatment for any information so disclosed.  
+
+d. Return of Materials.  The Receiving Party will return or destroy (at the
+Disclosing Party's election) all Confidential Information (including all
+copies) received from the Disclosing Party within its possession, custody, or
+control promptly upon termination or expiration of this Agreement or upon the
+earlier written request of the Disclosing Party.  At the request of the
+Disclosing Party, after such return or destruction, the Receiving Party shall
+certify in writing that such return or destruction has been accomplished.
+
+e. Exceptions.  Confidential Information does not include information which
+as evidenced in writing by the Receiving Party: (i) is known to the Receiving
+Party or later received from a third party, in each case with no
+confidentiality restriction; or (ii) is publicly known or becomes publicly
+known and made generally available through no wrongful act of the Receiving
+Party
+
+f. Privacy Policy.  You are solely responsible for publishing and maintaining
+a privacy policy that adequately provides all notices and obtaining all
+consents regarding the collection, use, and disclosure of data using the
+Licensed Software and as otherwise provided and will indemnify and hold
+harmless TigerGraph from any harm arising because of or for any violation of
+the foregoing. You will not provide TigerGraph any personally identifiable
+information under this Agreement. You are responsible for Your data and have
+the obligation to backup all Your data to avoid loss before, during and after
+using the Licensed Software. TigerGraph is not responsible for Your data
+loss.
+
+5. Term and Termination. 
+ 
+a. Term.  This Agreement commences on the date the License Software is made
+available to You and continues for the Term, unless terminated earlier under
+Section 5.b below. 
+
+b. Termination.  This Agreement may be terminated by TigerGraph at any time
+at its discretion upon notice to You or by either party if a party breaches
+any of its material obligations under this Agreement and the breach, if
+capable of being cured, is not cured within thirty (30) days from receipt of
+written notice of such breach. 
+
+c. Effect of Termination.  Upon the expiration or termination of this
+Agreement all licenses shall immediately terminate and You shall cease all
+use of the Licensed Software.  Sections 1, 3d, 3e, 3f, 4, 5.c, 6, 7a, 7b, 7c,
+7d, 9, 11, 12 shall survive the expiration or termination of this Agreement.
+
+6. Third Party Software.
+
+The Licensed Software may be distributed with
+certain third-party software components, including open source software
+licensed under open source licenses (the "Third-Party Software"). 
+Information regarding such Third-Party Software and their terms is available
+aggregated into a file named THIRD_PARTY_LICENSES in the technical
+documentation provided electronically for the Licensed Software.  Nothing
+herein is intended, nor shall be deemed or interpreted, to limit or restrict
+any rights you may have under such separate terms.  Such Third-Party Software
+is licensed to you under the applicable third party license. Upon request and
+at no charge, TigerGraph will provide You with a copy of the source code to
+Third Party Software which is open source software. You may not modify or
+make derivative works of Third Party Software for use with the Licensed
+Software. 
+
+7. Fees and Payment
+
+a. Fees.  Customer will pay TigerGraph the fees for the Licenses and Services
+as set forth in the applicable Order ("Fees"). Customer acknowledges and
+agrees that if Customer's use of the Software exceeds the Licensed Capacity
+set forth on the applicable Orders or otherwise requires the payment of
+additional fees (per the terms of this Agreement), Customer shall be invoiced
+for such usage and Customer agrees to pay the additional fees in accordance
+with this Section 5. 
+
+b. Payment Terms.  Except as otherwise specifically set forth on an Order
+Document, all fees are due and payable within thirty (30) days after the date
+of invoice. Renewal Fees for any renewal Subscription Term (if purchased by
+Customer) will be due and payable within thirty (30) days of expiration of
+the then- current term. If Fees are not paid when due, Customer must
+discontinue use of the Software and TigerGraph may suspend its performance,
+including its delivery of technical support of the Software or other
+Services. All Orders (including multi-year Subscriptions with annual payment
+schedules) are non- cancellable and all amounts paid are non-refundable,
+unless otherwise expressly set forth herein. Any invoiced amount not received
+by the due date will accrue late interest at the rate of 1.5% of the
+outstanding balance per month, or the maximum rate permitted by applicable
+law, whichever is lower.
+ 
+c.  Taxes. Fees are exclusive of taxes. Customer will pay any sales, use,
+value added, surtax and personal property taxes, duties, fees and other
+governmental assessments or charges arising out of this Agreement and the
+transactions contemplated herein, excluding taxes based on TigerGraph's net
+income. Customer will make all payments free and clear of, and without
+reduction for, any withholding taxes. 
+
+d. Reconciliation. At TigerGraph's request from time to time, not exceeding
+once per quarter, Customer will provide TigerGraph with a report detailing
+its use of the Software, including its non-production and/or production use
+and using the self-monitoring capabilities of the Software or other means,
+and TigerGraph may inspect Customer's records related to such report not more
+frequently than annually to ensure payment of Fees. Any on site review will
+be conducted during regular business hours at Customer's offices and will not
+unreasonably interfere with Customer's business. The parties will use
+reasonable good faith efforts to promptly resolve any discrepancies between
+licensed usage and actual usage.
+ 
+e. Professional Services. TigerGraph shall provide the number of person-days
+of professional consulting or training services ("Professional Services")
+purchased in the applicable Order Document or online ordering process. The
+parties acknowledge that the scope of the Professional Services provided
+hereunder consists solely of either or both of: (a) assistance with Software
+installation, deployment, and usage; and (b) training in use of the Software.
+Each SOW must be signed by both parties before TigerGraph shall commence work
+under such SOW. If the parties do not execute a separate SOW, the
+Professional Services shall be provided as stated on the Order Document
+and/or described in the applicable Services Data Sheet. No Intellectual
+Property Rights are transferred, licensed, or granted to Customer under
+Professional Services unless otherwise specifically stated in an Order or
+SOW. 
+
+8. Limited Warranty
+
+a. YOU ACKNOWLEDGE THAT NO WARRANTY IS PROVIDED FOR THE ENTERPRISE EVALUATION
+LICENSE AND THE DEVELOPER EDITION LICENSE, AND TIGERGRAPH AND ITS SUPPLIERS
+AND LICENSORS HEREBY DISCLAIM ALL OTHER WARRANTIES OF ANY KIND, WHETHER
+EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE,
+NONINFRINGEMENT, AVAILABILITY, OR RESULTS.  TIGERGRAPH DOES NOT WARRANT THAT
+THE LICENSED SOFTWARE WILL BE ERROR-FREE OR THAT THE LICENSED SOFTWARE WILL
+WORK WITHOUT INTERRUPTIONS.
+
+b. For Enterprise License, TigerGraph warrants to Customer that for a period
+of sixty (60) days after TigerGraph makes the Licensed Software available to
+Customer ("Warranty Period"), the Licensed Software and provided Third Party
+Software will conform in all material respects to the applicable
+Documentation.  Any claims under this warranty must be in writing specifying
+the claim and must be received by TigerGraph within the Warranty Period.  If
+the Licensed Software fails to conform to this warranty, then TigerGraph
+shall have thirty (30) days following receipt of Customer's warranty claim to
+make commercially reasonable efforts to repair or replace the Licensed
+Software at no charge to Customer.  If TigerGraph is unable to repair or
+replace the Licensed Software During the Warranty period, Customer may
+terminate this Agreement and receive a pro-rated refund of license fees paid
+for the defective Licensed Software. This Section states TigerGraph' sole
+obligation and Customer's sole remedy for any breach of this warranty.
+
+9. Your Responsibilities
+
+a. You are solely responsible for the development, content, operation,
+maintenance, and use of Your Data. For example, You are solely responsible
+for:
+i. the technical operation of Your Data, including ensuring that calls You
+make to any Service are compatible with then-current APIs for that Service;
+ii. compliance of Your Data with third party Acceptable Use Policies and the
+law;
+iii. any claims relating to Your Data; and
+iv. properly handling and processing notices sent to You (or any of Your
+affiliates) by any person claiming that Your Data violates such person's
+rights, including notices pursuant to the Digital Millennium Copyright Act.
+
+b. You are responsible for properly configuring and using the Licensed
+Software and taking Your own steps to maintain appropriate security,
+protection and backup of Your Data. Such steps may include the use of
+encryption technology to protect Your Data from unauthorized access and
+routine archiving of Your Data.
+
+c. By default, the Licensed Software is provided without host machines or
+networks, meaning that You must select those hosts and networks onto which to
+install the Software, and You are solely responsible for appropriately
+managing, restricting and monitoring such access and access controls.
+
+d. Log-in credentials and private keys generated by the Licensed Software are
+for Your internal use only and You may not sell, transfer, or sublicense them
+to any other entity or person, except that You may disclose Your private key
+to Your agents and subcontractors to perform work permitted by this Agreement
+on Your behalf.
+
+e. You acknowledge that you should implement appropriate protections for Your
+Data.
+
+10. Indemnification.
+
+a. Indemnification by TigerGraph.  TigerGraph shall, at its expense, defend,
+or at its option settle, any unaffiliated third party claim brought against
+You to the extent the claim alleges that the Licensed Software (excluding any
+Third Party Software) as delivered to You and used as authorized in this
+Agreement and as provided in any instructions or documentation, infringes any
+U.S. Patent or copyright  of any third party, and will pay any amounts
+finally awarded thereon or agreed to by TigerGraph in settlement thereof;
+provided that You provide TigerGraph with: (i) prompt written notice of such
+claim; (ii) sole control over the defense and settlement of such claim; and
+(iii) all information and assistance reasonably requested by TigerGraph for
+the defense and settlement of such claim.
+In the event an injunction is issued in such claim, TigerGraph may terminate
+this Agreement.
+
+b. Limitations.  TigerGraph will have no obligation to indemnify for any
+claim of infringement to the extent such claim arises out of or is based
+upon: (i) use of the Licensed Software combined with software, products, or
+services not provided by TigerGraph; (ii) any alteration or modification of
+the Licensed Software, in whole or in part, not made by TigerGraph; (iii)
+Your failure to use the Licensed Software under this Agreement or
+instructions provided by TigerGraph, or otherwise using the Licensed Software
+for purposes for which it was not designed or intended; (iv) use of Licensed
+Software provided by TigerGraph to comply with the designs, specifications,
+or requirements requested by You; (v) any Third Party Software, or (vi) use
+of any specified release of the Licensed Software after TigerGraph notifies
+You that continued use of such release may subject You to a claim of
+infringement, if TigerGraph provides You with a replacement release.
+
+c. Disclaimer.  THE FOREGOING PROVISIONS OF THIS SECTION STATE THE ENTIRE
+LIABILITY AND OBLIGATIONS OF TIGERGRAPH, AND THE EXCLUSIVE REMEDY TO YOU,
+WITH RESPECT TO ANY ACTUAL OR ALLEGED INFRINGEMENT OF ANY THIRD PARTY
+INTELLECTUAL PROPERTY RIGHTS BY THE LICENSED SOFTWARE OR ANY PART THEREOF.
+
+11. Limitation of Liability.  
+
+EXCEPT WITH RESPECT TO LIABILITY FOR BREACH OF CONFIDENTIALITY OBLIGATIONS,
+INDEMNITY OBLIGATIONS, MISUSE OR BREACH OF INTELLECTUAL PROPERY RIGHTS, UNDER
+NO CIRCUMSTANCES, INCLUDING NEGLIGENCE, WILL A PARTY OR ANY OF ITS LICENSORS
+OR SUPPLIERS BE LIABLE   HEREUNDER FOR ANY INDIRECT, INCIDENTAL, EXEMPLARY,
+PUNITIVE, RELIANCE, SPECIAL OR CONSEQUENTIAL DAMAGES, INCLUDING WITHOUT
+LIMITATION ANY LOSS OF BUSINESS, LOSS OF USE, LOST PROFIT, LOSS OF DATA, OR
+DAMAGE TO NETWORKS OR EQUIPMENT.  TIGERGRAPHS TOTAL LIABILITY ARISING OUT OF
+OR RELATING TO THIS AGREEMENT OR ANY LICENSED SOFTWARE OR SERVICE SHALL NOT
+EXCEED THE AMOUNT PAID BY CUSTOMER FOR THE RESPECTIVE LICENSED SOFTWARE OR
+SERVICE TO WHICH THE CLAIM RELATES DURING THE TWELVE (12) MONTH PERIOD
+IMMEDIATELY PRECEDING THE APPLICABLE CLAIM.  THE FOREGOING LIMITATIONS APPLY
+WHETHER A PARTY HAS BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGES AND
+IRRESPECTIVE OF THE FAILURE OF ESSENTIAL PURPOSE OF ANY LIMITED REMEDY
+HEREIN.  CUSTOMER ACKNOWLEDGES THAT TIGERGRAPH'S ABILITY TO OFFER THE
+LICENSED SOFTWARE TO CUSTOMER AT THE RATES PROVIDED IS AND THAT THE
+LIMITATIONS IN THIS SECTION REPRESENT A REASONABLE ALLOCATION OF RISK FOR THE
+PARTIES.
+
+12. Miscellaneous.  
+
+a. Any notice required or permitted to You shall be shall be given in writing
+to the email address provided by You.  Any notice required or permitted to
+Tigergraph shall be shall be given in writing to: TigerGraph, 3 Twin Dolphin
+Drive, Suite 160, Redwood City California, 94065, Attention: Legal or to such
+other address as TigerGraph may substitute by written notice. 
+ 
+b. The Agreement will be governed by and construed under the laws of the
+State of California, without giving effect to any principles of conflicts of
+law, and any dispute arising shall be subject to the exclusive jurisdiction
+and venue of the courts in Santa Clara County, California.  The parties agree
+that the Uniform Computer Information Transaction Act (or any statutory
+implementation of it) and the United Nations Convention on the International
+Sale of Goods will not apply regarding this Agreement or the parties'
+relationship.  
+
+c. This Agreement, and any rights and licenses granted, may not be
+transferred or assigned by You without the prior written consent of
+TigerGraph and any attempted assignment in violation of the foregoing will be
+void.  For the foregoing, "assignment" will not include any transaction or
+series of related transactions in which any previously unaffiliated third
+party obtains control, directly or indirectly, over You, including by sale of
+stock, merger, law, or otherwise.  TigerGraph may assign this Agreement
+without restriction.  Subject to the foregoing, this Agreement will be
+binding upon the parties' respective successors and permitted assigns.  
+
+d. This Agreement, constitutes the entire agreement of the parties regarding
+the subject, and supersedes all previous communications and agreements
+between the parties regarding the subject. No amendment or modification will
+be valid or binding upon either party unless made in writing and signed by
+the authorized representatives of both parties.  This Agreement supersedes
+all terms in any purchase order or other document submitted by You that are
+additional to or inconsistent with this Agreement, and all such terms are
+rejected.   If a portion of this Agreement is held unenforceable, the
+unenforceable portion will be construed under applicable law nearly as
+possible to reflect the original intentions of the parties, and the remainder
+of the Agreement will remain in full force and effect. 
+ 
+e. Failure to strictly enforce any provision of this Agreement will not be
+construed as a waiver of any provision or right, and waiver by either party
+of a breach of any provision or the failure by either party to exercise any
+right shall not operate or be construed as a waiver of any later breach of
+that right or as a waiver of any other right.  
+
+f. The parties agree that during negotiations, drafts will properly show
+redlined changes. 
+
+g. You agree to comply with all U.S. and foreign export control laws and
+regulations applicable to the Licensed Software licensed.  
+
+h. The parties may use logos and names of the other party for marketing
+purposes only. This Agreement will not create or be deemed to create any
+agency, partnership, or joint venture between the parties.
+
+i. User Outside the U.S. If you are using the Licensed Software or
+Documentation outside the U.S.A., then the following shall apply: (a) You
+confirm that this Agreement and all related documentation is and will be in
+the English language; (b) you are responsible for complying with any local
+laws in your jurisdiction which might impact your right to import, export or
+use the Licensed Software and Documentation, and you represent that you have
+complied with any regulations or registration procedures required by
+applicable law to make this license enforceable.
+
+j. Export Controls. The Licensed Software and Documentation and the
+underlying information and technology may not be downloaded or otherwise
+exported or re-exported (a) into (or to a national or resident of) any
+country to which the U.S. has embargoed goods; or (b) to anyone on the U.S.
+Treasury Department's list of Specially Designated Nationals or the U.S.
+Commerce Department's Table of Deny Orders. By downloading or using the
+Licensed Software and/or Documentation, you are agreeing to the foregoing and
+you represent and warrant that you are not located in, under the control of,
+or a national or resident of any such country or on any such list and you
+agree to comply with all export laws and other applicable laws.
+
+k. U.S. Government End Users. The Licensed Software and Documentation each
+were developed by private financing and constitute "Commercial Items," as
+that term is defined at 48 C.F.R. 2.101. The Licensed Software consists of
+"Commercial Computer Software" and "Commercial Computer Software
+Documentation," as such terms are used in 48 C.F.R. 12.212. Consistent with
+48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 227.7202-4, all U.S.
+Government End Users acquire only those rights in the Licensed Software and
+the Documentation that are specifically provided by this Agreement.
+Consistent with 48 C.F.R. 12.211, all U.S. Government End Users acquire only
+technical data and the rights in that data customarily as specifically
+provided in this Agreement.
+

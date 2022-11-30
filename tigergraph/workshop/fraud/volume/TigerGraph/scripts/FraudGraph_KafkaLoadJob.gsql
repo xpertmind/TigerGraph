@@ -1,0 +1,23 @@
+USE GRAPH FraudGraph
+DROP JOB kafka_real_time_loader
+DROP DATA_SOURCE kafka_loader
+
+CREATE DATA_SOURCE KAFKA kafka_loader = "/home/tigergraph/scripts/kafka.config" FOR GRAPH FraudGraph
+
+CREATE LOADING JOB kafka_real_time_loader FOR GRAPH FraudGraph {
+	DEFINE FILENAME customer = "$kafka_loader:/home/tigergraph/scripts/customer.config";
+	DEFINE FILENAME merchant = "$kafka_loader:/home/tigergraph/scripts/merchant.config";
+	DEFINE FILENAME category = "$kafka_loader:/home/tigergraph/scripts/category.config";
+	DEFINE FILENAME transaction = "$kafka_loader:/home/tigergraph/scripts/transaction.config";
+
+	LOAD customer TO VERTEX customer VALUES ($"payload":"after":"code", $"payload":"after":"name", $"payload":"after":"active", $"payload":"after":"email", $"payload":"after":"birthday", _, _, _, _, _, _) USING JSON_FILE="true";
+	LOAD merchant TO VERTEX merchant VALUES ($"payload":"after":"code", $"payload":"after":"name", _, _) USING JSON_FILE="true";
+  LOAD transaction TO VERTEX transaction VALUES ($"payload":"after":"trans_id", $"payload":"after":"amount", $"payload":"after":"isfraud", _, $"payload":"after":"customer", $"payload":"after":"merchant", $"payload":"after":"type", _, _, _, _, _, _, _, _, _, _, _ ) USING JSON_FILE="true";
+	LOAD category TO VERTEX category VALUES ($"payload":"after":"id", _, _) USING JSON_FILE="true";
+
+	LOAD transaction to EDGE customer2transaction VALUES ($"payload":"after":"customer", $"payload":"after":"trans_id") USING JSON_FILE="true";
+	LOAD transaction to EDGE transaction2category VALUES ($"payload":"after":"trans_id", $"payload":"after":"type") USING JSON_FILE="true";
+	LOAD transaction to EDGE transaction2merchant VALUES ($"payload":"after":"trans_id", $"payload":"after":"merchant" ) USING JSON_FILE="true";
+}
+
+RUN LOADING JOB kafka_real_time_loader

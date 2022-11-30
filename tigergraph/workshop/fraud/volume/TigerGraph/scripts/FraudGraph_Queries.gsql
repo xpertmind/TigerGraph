@@ -1,0 +1,1336 @@
+USE GRAPH FraudGraph
+// =========================================================================
+// Queries
+
+CREATE QUERY AA_graph_vs_relational(SET<VERTEX <transaction>> these_transactions, INT days_history=1, STRING graphYN="N") FOR GRAPH FraudGraph SYNTAX v2 {
+	/*
+
+	 This is the per transaction graph expansion  = via: history, bad merchant, bad category, timesteps = historical range
+	shows on graph. This shows the vertices and edges.
+
+	 e.g.  e.g. [88795, 6618] , 2
+	 */
+
+	SetAccum <VERTEX> @@the_vertices;
+	SetAccum <EDGE> @@the_edges;
+
+	AllT = {these_transactions};
+
+	AllT = select t from AllT:t;
+
+	AllCust = select c from AllT:t-(_:c2t)-customer:c
+	ACCUM @@the_edges += c2t;
+
+	AllMerch = select m from AllT:t-(_:tm)-merchant:m
+	ACCUM @@the_edges += tm;
+
+	AllCat = select c from AllT:t-(_:t2cat)-category:c
+	ACCUM @@the_edges += t2cat;
+
+  badT1(transaction)={};
+  badT2(transaction)={};
+  badT3(transaction)={};
+
+	IF graphYN == "Y" THEN
+
+	// Get historical fraud transactions on these merchants in range of days given
+	// TODO: num_frauds in period, num_trans in period
+	badT1 = select ot from AllT:t-(transaction2merchant)-merchant:m-(transaction2merchant:m2t)-transaction:ot
+	  WHERE ot.step <= t.step AND ot.step >= (t.step - days_history) AND ot.fraud==1 AND t!=ot AND str_to_int(t.id) > str_to_int(ot.id)
+	  ACCUM @@the_edges += m2t;
+
+	// Get historical fraud transactions on this customer in range of days given
+	// TODO: num_frauds in period, num_trans in period
+	badT2 = select ot from AllT:t-(_)-customer:c-(_:c2t)-transaction:ot
+	  WHERE ot.step <= t.step AND ot.step >= (t.step - days_history) AND ot.fraud==1 AND t != ot AND str_to_int(t.id) > str_to_int(ot.id)
+	  ACCUM @@the_edges += c2t;
+
+	// Get historical fraud transactions on these categories in range of days given
+	// TODO: num_frauds in period, num_trans in period
+	badT3 = select ot from AllT:t-(_)-category:c-(_:c2t)-transaction:ot
+	  WHERE ot.step <= t.step AND ot.step >= (t.step - days_history) AND ot.fraud==1 AND t != ot AND str_to_int(t.id) > str_to_int(ot.id)
+	  ACCUM @@the_edges += c2t;
+
+	END; // of if graphYN=="Y"
+
+	PRINT @@the_edges, AllT, AllCust, AllMerch, AllCat, badT1, badT2, badT3;
+
+}
+// INSTALL QUERY AA_graph_vs_relational
+
+// -------------------------------------------------------------------------
+CREATE QUERY fix_statistics() FOR GRAPH FraudGraph {
+  /*  calculates statistics across
+	  RH:  In real world, statistics would be updated per transaction incrementally, not in bulk like this */
+
+	// statistics's
+	SumAccum<INT> @frauds; // fraud_fraction_alltime = frauds/numTrans
+	SumAccum <INT> @numTrans;
+	ListAccum <DOUBLE> @amounts;
+	AvgAccum  @mean;
+	SumAccum <INT> @@num_frauds;
+  MaxAccum <INT> @@today;
+
+  AllT = {transaction.*};
+  AllT = select t from AllT:t
+  POST-ACCUM @@today += t.step;
+
+  //print @@today;
+
+	AllC = {customer.*};
+
+	AllC = select c from AllC:c -(customer2transaction)- transaction:t
+	ACCUM
+	      c.@frauds += t.fraud,
+	      c.@amounts += t.amount,
+	      c.@numTrans += 1,
+	      c.@mean += t.amount
+	POST-ACCUM
+	  double runSum=0,
+	  c.num_frauds = c.@frauds,
+	  c.average_purchase = c.@mean,
+    IF c.@numTrans > 1 THEN
+      FOREACH a IN c.@amounts DO
+	      runSum = runSum + pow(a-c.@mean, 2)  // this gives the square of the mean difference
+	    END,
+	    c.stddev_purchase = sqrt(runSum/(c.@numTrans-1))
+    ELSE
+      c.stddev_purchase = 0
+    END,// corrected stddev
+	  c.num_trans = c.@numTrans;
+
+	AllM = {merchant.*};
+	AllM = select m from AllM:m-(transaction2merchant)-transaction:t
+	  ACCUM
+	      m.@frauds += t.fraud,
+	      m.@numTrans += 1
+	  POST-ACCUM
+	    m.num_frauds = m.@frauds,
+	    m.num_trans = m.@numTrans;
+
+
+	AllCat = {category.*};
+
+	AllCat = select c from AllCat:c-(transaction2category)-transaction:t
+  ACCUM
+	      c.@frauds += t.fraud,
+	      c.@numTrans += 1
+	  POST-ACCUM
+	    c.num_frauds = c.@frauds,
+	    c.num_trans = c.@numTrans;
+
+	AllT = {transaction.*};
+	AllT = select t from AllT:t
+	POST-ACCUM
+	  @@num_frauds += t.fraud;
+
+	AllG = {global_stats.*};
+	IF AllG.size() == 0 THEN
+	  INSERT INTO global_stats VALUES ("1", AllT.size(), @@num_frauds);
+	ELSE
+	  UPDATE g FROM AllG:g SET g.num_trans = AllT.size(), g.num_frauds = @@num_frauds;
+	END;
+
+  print "global, category, merchant and customer all-history statistics updated" as complete;
+}
+
+// -------------------------------------------------------------------------
+
+BEGIN
+CREATE QUERY get_all_trans_tabular(INT days_history=1) FOR GRAPH FraudGraph {
+	/*
+	 This is the all transactions in timespan specified with graph expansion
+  Returns a table with some days history aggregated
+  Basic info: tran_id, my_cust, my_merch, my_cat, amount, is_fraud, step
+   Cust history info agg'd for last days inc any others today: cust_avg_amount, cust_max_amount, cust_num_trans, cust_num_frauds
+  Merchant history info agg'd : merch_avg_amount, merch_max_amount, merch_num_trans, merch_num_frauds
+  Category history : cat_avg_amount, cat_max_amount, cat_num_trans, cat_num_frauds
+
+	 */
+  // Maps: day/step value -> aggregate values ready for pulling into transactions
+ GroupByAccum <INT step, SumAccum <DOUBLE> sum_amount, MaxAccum <DOUBLE> max_amount, SumAccum <INT> num_trans, SumAccum <INT> num_frauds> @my_aggs;
+
+  // This is what we'll use to calc outputs per transaction
+  MinAccum <STRING> @my_merch, @my_cat, @my_cust;
+  SumAccum <DOUBLE> @cust_sum, @merch_sum, @cat_sum;
+  MaxAccum <DOUBLE> @cust_max, @merch_max, @cat_max;
+  SumAccum <INT> @cust_num_t, @cust_num_f, @merch_num_t, @merch_num_f, @cat_num_t, @cat_num_f ;
+
+	// TODO: Store maximum day in global stats. As it is maxstep is 179
+  // Probably this would be windowed in the real world i.e. only look at 3 months history
+	AllC = {customer.*};
+  AllC = select c from AllC:c-(customer2transaction)-transaction:t
+  ACCUM
+    c.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllM = {merchant.*};
+  AllM = select m from AllM:m-(transaction2merchant)-transaction:t
+  ACCUM
+    m.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllCat = {category.*};
+  AllCat = select cat from AllCat:cat-(transaction2category)-transaction:t
+  ACCUM
+    cat.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  // OK, so now we go through all transactions, grabbing agg's from related historical records as we go
+  // offset from step in transaction itself
+  // Given we have a transaction we would need to filter out this transaction and transactions later in sequence, but we'll risk it for now.
+  // Though it may give our learner a preview of frauds it won't have seen yet on any particular day.
+
+  AllT = {transaction.*};
+
+  /* So these aren't strictly correct as each transaction will see future fraud on current day so will over-estimate */
+
+  // Grab cust history
+
+  AllT = select t from AllT:t -(customer2transaction)-customer:c
+    ACCUM // will be one customer per transaction
+      t.@my_cust = c.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@cust_sum += c.@my_aggs.get(step).sum_amount,
+        t.@cust_max += c.@my_aggs.get(step).max_amount,
+        t.@cust_num_t += c.@my_aggs.get(step).num_trans,
+        t.@cust_num_f += c.@my_aggs.get(step).num_frauds
+      END;
+
+  AllT = select t from AllT:t -(transaction2merchant)-merchant:m
+    ACCUM
+      t.@my_merch = m.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@merch_sum += m.@my_aggs.get(step).sum_amount,
+        t.@merch_max += m.@my_aggs.get(step).max_amount,
+        t.@merch_num_t +=  m.@my_aggs.get(step).num_trans,
+        t.@merch_num_f += m.@my_aggs.get(step).num_frauds
+      END;
+
+  T = select t from AllT:t -(transaction2category)-category:cat
+    ACCUM
+      t.@my_cat = cat.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@cat_sum += cat.@my_aggs.get(step).sum_amount,
+        t.@cat_max += cat.@my_aggs.get(step).max_amount,
+        t.@cat_num_t +=  cat.@my_aggs.get(step).num_trans,
+        t.@cat_num_f += cat.@my_aggs.get(step).num_frauds
+      END;
+
+  PRINT T[/* T.id,*/ T.amount, T.fraud, T.step,
+              T.@my_cust, T.@my_merch, T.@my_cat,
+              T.@cust_sum, T.@cust_max, T.@cust_num_t, T.@cust_num_f,
+              T.@merch_sum, T.@merch_max, T.@merch_num_t, T.@merch_num_f,
+              T.@cat_sum, T.@cat_max, T.@cat_num_t, T.@cat_num_f] ;
+
+}
+END
+//INSTALL QUERY get_all_trans_tabular
+
+// -------------------------------------------------------------------------
+
+BEGIN
+CREATE QUERY get_all_trans_tabular_100(INT days_history=1, INT max_trans=100) FOR GRAPH FraudGraph {
+	/*
+	 This is the all transactions in timespan specified with graph expansion
+  Returns a table with some days history aggregated
+  Basic info: tran_id, my_cust, my_merch, my_cat, amount, is_fraud, step
+   Cust history info agg'd for last days inc any others today: cust_avg_amount, cust_max_amount, cust_num_trans, cust_num_frauds
+  Merchant history info agg'd : merch_avg_amount, merch_max_amount, merch_num_trans, merch_num_frauds
+  Category history : cat_avg_amount, cat_max_amount, cat_num_trans, cat_num_frauds
+
+	 */
+  // Maps: day/step value -> aggregate values ready for pulling into transactions
+ GroupByAccum <INT step, SumAccum <DOUBLE> sum_amount, MaxAccum <DOUBLE> max_amount, SumAccum <INT> num_trans, SumAccum <INT> num_frauds> @my_aggs;
+
+  // This is what we'll use to calc outputs per transaction
+  MinAccum <STRING> @my_merch, @my_cat, @my_cust;
+  SumAccum <DOUBLE> @cust_sum, @merch_sum, @cat_sum;
+  MaxAccum <DOUBLE> @cust_max, @merch_max, @cat_max;
+  SumAccum <INT> @cust_num_t, @cust_num_f, @merch_num_t, @merch_num_f, @cat_num_t, @cat_num_f ;
+
+	// TODO: Store maximum day in global stats. As it is maxstep is 179
+  // Probably this would be windowed in the real world i.e. only look at 3 months history
+	AllC = {customer.*};
+  AllC = select c from AllC:c-(customer2transaction)-transaction:t
+  ACCUM
+    c.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllM = {merchant.*};
+  AllM = select m from AllM:m-(transaction2merchant)-transaction:t
+  ACCUM
+    m.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllCat = {category.*};
+  AllCat = select cat from AllCat:cat-(transaction2category)-transaction:t
+  ACCUM
+    cat.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  // OK, so now we go through all transactions, grabbing agg's from related historical records as we go
+  // offset from step in transaction itself
+  // Given we have a transaction we would need to filter out this transaction and transactions later in sequence, but we'll risk it for now.
+  // Though it may give our learner a preview of frauds it won't have seen yet on any particular day.
+
+  AllT = {transaction.*};
+
+  /* So these aren't strictly correct as each transaction will see future fraud on current day so will over-estimate */
+
+  // Grab cust history
+
+  AllT = select t from AllT:t -(customer2transaction)-customer:c
+    ACCUM // will be one customer per transaction
+      t.@my_cust = c.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@cust_sum += c.@my_aggs.get(step).sum_amount,
+        t.@cust_max += c.@my_aggs.get(step).max_amount,
+        t.@cust_num_t += c.@my_aggs.get(step).num_trans,
+        t.@cust_num_f += c.@my_aggs.get(step).num_frauds
+      END;
+
+  AllT = select t from AllT:t -(transaction2merchant)-merchant:m
+    ACCUM
+      t.@my_merch = m.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@merch_sum += m.@my_aggs.get(step).sum_amount,
+        t.@merch_max += m.@my_aggs.get(step).max_amount,
+        t.@merch_num_t +=  m.@my_aggs.get(step).num_trans,
+        t.@merch_num_f += m.@my_aggs.get(step).num_frauds
+      END;
+
+  T = select t from AllT:t -(transaction2category)-category:cat
+    ACCUM
+      t.@my_cat = cat.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@cat_sum += cat.@my_aggs.get(step).sum_amount,
+        t.@cat_max += cat.@my_aggs.get(step).max_amount,
+        t.@cat_num_t +=  cat.@my_aggs.get(step).num_trans,
+        t.@cat_num_f += cat.@my_aggs.get(step).num_frauds
+      END
+    LIMIT max_trans;
+
+  PRINT T[/* T.id,*/ T.amount, T.fraud, T.step,
+              T.@my_cust, T.@my_merch, T.@my_cat,
+              T.@cust_sum, T.@cust_max, T.@cust_num_t, T.@cust_num_f,
+              T.@merch_sum, T.@merch_max, T.@merch_num_t, T.@merch_num_f,
+              T.@cat_sum, T.@cat_max, T.@cat_num_t, T.@cat_num_f] ;
+
+}
+END
+//INSTALL QUERY get_all_trans_tabular_100
+
+// -------------------------------------------------------------------------
+
+BEGIN
+CREATE QUERY get_all_trans_tofile(INT days_history=1, STRING outfile="/home/tigergraph/output/out1.csv") FOR GRAPH FraudGraph {
+	/*
+	 This is the all transaction with graph expansion
+   Returns a table with some days history aggregated
+  Basic info: tran_id, amount, is_fraud, step
+  Cust history info agg'd for last days inc any others today: cust_avg_amount, cust_max_amount, cust_num_trans, cust_num_frauds
+  Merchant history info agg'd : merch_avg_amount, merch_max_amount, merch_num_trans, merch_num_frauds
+  Category history : cat_avg_amount, cat_max_amount, cat_num_trans, cat_num_frauds
+
+	 */
+
+  FILE f1 (outfile);
+
+  // Maps: day/step value -> aggregate values ready for pulling into transactions
+  GroupByAccum <INT step, SumAccum <DOUBLE> sum_amount, MaxAccum <DOUBLE> max_amount, SumAccum <INT> num_trans, SumAccum <INT> num_frauds> @my_aggs;
+
+  // This is what we'll use to calc outputs per transaction
+  MinAccum <STRING> @my_merch, @my_cat, @my_cust;
+  SumAccum <DOUBLE> @cust_sum, @merch_sum, @cat_sum;
+  MaxAccum <DOUBLE> @cust_max, @merch_max, @cat_max;
+  SumAccum <INT> @cust_num_t, @cust_num_f, @merch_num_t, @merch_num_f, @cat_num_t, @cat_num_f ;
+
+  // Probably this would be windowed in the real world i.e. only look at 3 months history
+
+	AllC = {customer.*};
+  AllC = select c from AllC:c-(customer2transaction)-transaction:t
+  ACCUM
+    c.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllM = {merchant.*};
+  AllM = select m from AllM:m-(transaction2merchant)-transaction:t
+  ACCUM
+    m.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllCat = {category.*};
+  AllCat = select cat from AllCat:cat-(transaction2category)-transaction:t
+  ACCUM
+    cat.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  // OK, so now we go through all transactions, grabbing agg's from related historical records as we go
+  // offset from step in transaction itself
+  // Given we have a transaction we would need to filter out this transaction and transactions later in sequence, but we'll risk it for now.
+  // Though it may give our learner a preview of frauds it won't have seen yet on any particular day.
+
+  AllT = {transaction.*};
+
+  // Grab cust history
+  AllT = select t from AllT:t -(customer2transaction)-customer:c
+    ACCUM // will be one customer per transaction
+      t.@my_cust = c.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@cust_sum += c.@my_aggs.get(step).sum_amount,
+        t.@cust_max += c.@my_aggs.get(step).max_amount,
+        t.@cust_num_t += c.@my_aggs.get(step).num_trans,
+        t.@cust_num_f += c.@my_aggs.get(step).num_frauds
+      END;
+
+  AllT = select t from AllT:t -(transaction2merchant)-merchant:m
+    ACCUM
+      t.@my_merch = m.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@merch_sum += m.@my_aggs.get(step).sum_amount,
+        t.@merch_max += m.@my_aggs.get(step).max_amount,
+        t.@merch_num_t +=  m.@my_aggs.get(step).num_trans,
+        t.@merch_num_f += m.@my_aggs.get(step).num_frauds
+      END;
+
+   PRINT "id,amount,fraud,step,cust,merch,cat,cust_sum,cust_max,cust_num_t,cust_num_f,merch_sum,merch_max,merch_num_t,merch_num_f,cat_sum,cat_max,cat_num_t,cat_num_f" TO_CSV f1;
+
+  T = select t from AllT:t -(transaction2category)-category:cat
+    ACCUM
+      t.@my_cat = cat.id,
+      FOREACH step in RANGE[t.step-days_history, t.step] DO
+        t.@cat_sum += cat.@my_aggs.get(step).sum_amount,
+        t.@cat_max += cat.@my_aggs.get(step).max_amount,
+        t.@cat_num_t +=  cat.@my_aggs.get(step).num_trans,
+        t.@cat_num_f += cat.@my_aggs.get(step).num_frauds
+      END;
+
+
+  PRINT T.id, T.amount, T.fraud, T.step,
+              T.@my_cust, T.@my_merch, T.@my_cat,
+              T.@cust_sum, T.@cust_max, T.@cust_num_t, T.@cust_num_f,
+              T.@merch_sum, T.@merch_max, T.@merch_num_t, T.@merch_num_f,
+              T.@cat_sum, T.@cat_max, T.@cat_num_t, T.@cat_num_f TO_CSV f1;
+
+}
+END
+// INSTALL QUERY get_all_trans_tofile
+
+CREATE QUERY clear_txn_aggs() FOR GRAPH FraudGraph {
+  /* Write query logic here */
+  AllT = transaction.*;
+
+  AllT = select ts from AllT:ts
+  POST-ACCUM
+    ts.prev_frauds_cust = 0,
+    ts.prev_frauds_merch = 0,
+    ts.prev_frauds_cat = 0;
+
+  PRINT "clear_txn_aggs works!";
+}
+
+CREATE QUERY fix_txn_aggs() FOR GRAPH FraudGraph {
+  /*
+
+    The problem is, how to put aggregates per transaction for that day.
+
+    Fixes up a transaction with any previous frauds on the attached customer, merchant or category.
+
+    In production, this would be aggregated live based on the transactions that day
+
+    Time: About 3':34''
+
+  */
+
+  SetAccum <VERTEX<transaction>> @my_fraud_ts, @my_ts;
+  SumAccum <INT> @prev_f_cust, @prev_f_merch, @prev_f_cat; // prev's are for this day only
+  SumAccum <INT> @prev_t_cust, @prev_t_merch, @prev_t_cat;
+  SumAccum <DOUBLE> @prev_sum_cust, @prev_sum_merch, @prev_sum_cat;
+  MaxAccum <DOUBLE> @prev_max_cust=0, @prev_max_merch=0, @prev_max_cat=0;
+  MinAccum <int> @@min_step;
+  MaxAccum <int> @@max_step;
+ // MinAccum <INT> @int_id; // TODO waiting for fix to transaction key type
+
+  allT = {transaction.*};
+
+  allT = select t from allT:t
+  POST-ACCUM
+    @@min_step += t.step,
+    @@max_step += t.step;
+
+  //@@max_step=0;
+
+  // Fixing up transactions in each step, one at a time
+  // In the production world, this would be a single day
+
+  FOREACH i_step IN RANGE[@@min_step, @@max_step] DO
+
+    myFrauds = select t from allT:t
+    WHERE t.step == i_step AND t.fraud==1;
+
+    fraudC = select cs from myFrauds:t-()-customer:cs
+    ACCUM
+      cs.@my_fraud_ts += t; // Add all frauds on this step to the attached customer
+
+  // And attaches them to all transactions
+    fraudC = select cs from fraudC:cs-()-transaction:t
+    WHERE t.step == i_step
+    ACCUM
+      FOREACH it IN cs.@my_fraud_ts DO
+        IF it.id < t.id THEN
+          t.@prev_f_cust += 1 // add 1 when a fraud
+        END
+      END
+    POST-ACCUM
+      cs.@my_fraud_ts.clear();
+
+    fraudM = select ms from myFrauds:t-()-merchant:ms
+    ACCUM
+      ms.@my_fraud_ts += t; // Add all transactions on this step to the merchant
+
+    fraudM = select ms from fraudM:ms-()-transaction:t
+      WHERE t.step == i_step
+      ACCUM
+        FOREACH it IN ms.@my_fraud_ts DO
+          IF it.id < t.id THEN
+            t.@prev_f_merch += 1
+          END
+        END
+      POST-ACCUM
+        ms.@my_fraud_ts.clear();
+
+    fraudCat = select cat from myFrauds:t-()-category:cat
+      ACCUM
+        cat.@my_fraud_ts += t; // Add all transactions on this step to the category
+
+
+    fraudCat = select cat from fraudCat:cat-()-transaction:t
+      WHERE t.step == i_step
+        ACCUM
+          FOREACH it IN cat.@my_fraud_ts DO
+            IF it.id < t.id THEN
+              t.@prev_f_cat += 1
+            END
+          END
+        POST-ACCUM
+          cat.@my_fraud_ts.clear();
+
+
+    myTrans = select tt from allT:tt
+      WHERE tt.step == i_step;
+
+    myCMC = select cmc from myTrans:tt-()-:cmc
+      ACCUM
+        cmc.@my_ts += tt;
+
+    myCMC = select cmc from myCMC:cmc-()-transaction:tt
+      WHERE tt.step == i_step
+      ACCUM
+        FOREACH it IN cmc.@my_ts DO
+          IF it.id < tt.id THEN
+            CASE cmc.type
+            WHEN "category" THEN
+              tt.@prev_t_cat += 1,
+              tt.@prev_sum_cat += it.amount,
+              tt.@prev_max_cat += it.amount
+            WHEN "merchant" THEN
+              tt.@prev_t_merch += 1,
+              tt.@prev_sum_merch += it.amount,
+              tt.@prev_max_merch += it.amount
+            WHEN "customer" THEN
+              tt.@prev_t_cust += 1,
+              tt.@prev_sum_cust += it.amount,
+              tt.@prev_max_cust += it.amount
+            END // CASE
+          END // IF
+        END // FOREACH
+      POST-ACCUM
+        cmc.@my_ts.clear();
+
+    myTrans = select ts from myTrans:ts
+      POST-ACCUM
+        ts.prev_frauds_cust = ts.@prev_f_cust,
+        ts.prev_frauds_merch = ts.@prev_f_merch,
+        ts.prev_frauds_cat = ts.@prev_f_cat,
+        ts.prev_trans_cat = ts.@prev_t_cat,
+        ts.prev_trans_merch = ts.@prev_t_merch,
+        ts.prev_trans_cust = ts.@prev_t_cust,
+        ts.prev_sum_cat = ts.@prev_sum_cat,
+        ts.prev_sum_merch = ts.@prev_sum_merch,
+        ts.prev_sum_cust = ts.@prev_sum_cust,
+        ts.prev_max_cat = ts.@prev_max_cat,
+        ts.prev_max_merch = ts.@prev_max_merch,
+        ts.prev_max_cust = ts.@prev_max_cust;
+  END; // FOR loop
+
+
+
+  //print myTrans;
+  print "daily transaction aggregates updated" as complete;
+
+}
+
+CREATE QUERY get_all_c2c_2file(INT block_size, INT num_blocks) FOR GRAPH FraudGraph {
+  /* Write query logic here */
+
+  FILE f1 ("/home/tigergraph/test/c2c.out");
+
+  INT my_loops = 0;
+  my_loops = num_blocks;
+
+  all_cust = {customer.*};
+
+  my_cust = select cc from all_cust:cc LIMIT block_size;
+
+  f1.println("source,destination,p0,p1,p2,p3,p4,p5,p6,p7,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22,p23,p24,p25");
+  WHILE my_cust.size()>0 AND my_loops > 0 DO
+
+
+    new_cust = select cc from my_cust:cc-(:e)-customer:cc2
+    WHERE cc.id < cc2.id
+    ACCUM
+      STRING pstring="",
+      FOREACH ii IN RANGE[0,24] DO
+        pstring = pstring+to_string(e.map_period_to_weight.get(ii))+","
+      END,
+      pstring = pstring+to_string(e.map_period_to_weight.get(25)),
+     f1.println(cc.id, cc2.id,pstring);
+
+
+
+    my_loops = my_loops-1 ;
+    IF my_loops > 0 THEN
+      all_cust = all_cust MINUS my_cust;
+      my_cust = select cc from all_cust:cc LIMIT block_size;
+    END;
+
+    my_loops = my_loops; // heisenbug
+
+  END;
+
+   //f1.println("COMPLETE");
+
+}
+
+CREATE QUERY get_all_trans_tabular3(INT days_history=1) FOR GRAPH FraudGraph {
+	/*
+     Now with hops_to_fraud
+
+	 This is the all transactions in timespan specified with graph expansion
+  Returns a table with some days history aggregated
+  Basic info: tran_id, my_cust, my_merch, my_cat, amount, is_fraud, step
+   Cust history info agg'd for last days inc any others today: cust_avg_amount, cust_max_amount, cust_num_trans, cust_num_frauds
+  Merchant history info agg'd : merch_avg_amount, merch_max_amount, merch_num_trans, merch_num_frauds
+  Category history : cat_avg_amount, cat_max_amount, cat_num_trans, cat_num_frauds
+
+	 */
+  // Maps: day/step value -> aggregate values ready for pulling into transactions
+
+  // For markov, use global stats first, then customer stats later
+   typedef tuple <STRING ttid, INT fraud, VERTEX <transaction> tt> tt_tuple;
+
+ GroupByAccum <INT step, SumAccum <DOUBLE> sum_amount, MaxAccum <DOUBLE> max_amount, SumAccum <INT> num_trans, SumAccum <INT> num_frauds> @my_aggs;
+
+  // This is what we'll use to calc outputs per transaction
+  MinAccum <STRING> @my_merch, @my_cat, @my_cust;
+  SumAccum <DOUBLE> @cust_sum, @merch_sum, @cat_sum;
+  MaxAccum <DOUBLE> @cust_max=0, @merch_max=0, @cat_max=0, @cust_f_t=0, @merch_f_t=0, @cat_f_t=0;
+  SumAccum <INT> @cust_num_t, @cust_num_f, @merch_num_t, @merch_num_f, @cat_num_t, @cat_num_f, @f_prev, @f2_prev;
+
+  // ASC means first pop off the top is the lowest value
+  HeapAccum <tt_tuple> (1, ttid ASC) @transactions_in_order;
+
+  BitwiseOrAccum @f_markov_bitmap;
+
+  MapAccum <VERTEX<transaction>, UINT> @@tran_fraud_bitmaps;
+  ListAccum <VERTEX<transaction>> @@bunch_of_transactions;
+  // Probably this would be windowed in the real world i.e. only look at 3 months history
+
+  // Accumulate aggregates per historical step
+	AllC = {customer.*};
+  AllC = select c from AllC:c-(customer2transaction)-transaction:t
+  ACCUM
+    c.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllM = {merchant.*};
+  AllM = select m from AllM:m-(transaction2merchant)-transaction:t
+  ACCUM
+    m.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllCat = {category.*};
+  AllCat = select cat from AllCat:cat-(transaction2category)-transaction:t
+  ACCUM
+    cat.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  // OK, so now we go through all transactions, grabbing agg's from related historical records as we go
+  // offset from step in transaction itself from previous day
+
+  AllT = {transaction.*};
+
+
+  // Grab cust history
+
+  AllT = select t from AllT:t -(customer2transaction)-customer:c
+    ACCUM // will be one customer per transaction
+      t.@my_cust = c.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@cust_sum += c.@my_aggs.get(step).sum_amount,
+        t.@cust_max += c.@my_aggs.get(step).max_amount,
+        t.@cust_num_t += c.@my_aggs.get(step).num_trans,
+        t.@cust_num_f += c.@my_aggs.get(step).num_frauds
+      END,
+        t.@cust_sum += t.prev_sum_cust, // this day frauds, exact history
+        t.@cust_max += t.prev_max_cust,
+        t.@cust_num_t += t.prev_trans_cust,
+        t.@cust_num_f += t.prev_frauds_cust
+      POST-ACCUM
+          IF t.@cust_num_t > 0 AND t.@cust_num_f > 0 THEN t.@cust_f_t = 1.0 * t.@cust_num_f/t.@cust_num_t END;
+
+  AllT = select t from AllT:t -(transaction2merchant)-merchant:m
+    ACCUM
+      t.@my_merch = m.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@merch_sum += m.@my_aggs.get(step).sum_amount,
+        t.@merch_max += m.@my_aggs.get(step).max_amount,
+        t.@merch_num_t +=  m.@my_aggs.get(step).num_trans,
+        t.@merch_num_f += m.@my_aggs.get(step).num_frauds
+      END,
+        t.@merch_sum += t.prev_sum_merch,
+        t.@merch_max += t.prev_max_merch,
+        t.@merch_num_t += t.prev_trans_merch,
+        t.@merch_num_f += t.prev_frauds_merch
+      POST-ACCUM
+          IF t.@merch_num_t > 0 AND t.@merch_num_f > 0  THEN t.@merch_f_t = 1.0 * t.@merch_num_f/t.@merch_num_t END;
+
+  T = select t from AllT:t -(transaction2category)-category:cat
+    ACCUM
+      t.@my_cat = cat.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@cat_sum += cat.@my_aggs.get(step).sum_amount,
+        t.@cat_max += cat.@my_aggs.get(step).max_amount,
+        t.@cat_num_t +=  cat.@my_aggs.get(step).num_trans,
+        t.@cat_num_f += cat.@my_aggs.get(step).num_frauds
+      END,
+        t.@cat_sum += t.prev_sum_cat,
+        t.@cat_max += t.prev_max_cat,
+        t.@cat_num_t += t.prev_trans_cat,
+        t.@cat_num_f += t.prev_frauds_cat
+      POST-ACCUM
+          IF t.@cat_num_t > 0 AND t.@cat_num_f > 0 THEN t.@cat_f_t = 1.0 * t.@cat_num_f/t.@cat_num_t END;
+
+  // Set f_prev for each customer
+  all_c = {customer.*};
+  // attach correctly sized heap
+  all_c = select cc from all_c:cc
+  POST-ACCUM
+    cc.@transactions_in_order.resize(cc.outdegree("customer2transaction"));
+
+  all_c = select cc from all_c:cc-()-transaction:tt
+  ACCUM
+    cc.@transactions_in_order += tt_tuple(tt.id, tt.fraud, tt)
+  POST-ACCUM
+    UINT pre_fraud_bitmap=0,
+    // set transaction bitmap for later update
+    WHILE cc.@transactions_in_order.size() > 0 DO
+      IF pre_fraud_bitmap != 0 THEN
+        @@tran_fraud_bitmaps += (cc.@transactions_in_order.top().tt -> pre_fraud_bitmap)
+      END,
+      // Grab fraud bit for next record
+      pre_fraud_bitmap = (pre_fraud_bitmap << 1)+cc.@transactions_in_order.top().fraud,
+      pre_fraud_bitmap = pre_fraud_bitmap & 3,
+      // And pop old record
+      cc.@transactions_in_order.pop()
+    END,
+    cc.@transactions_in_order.clear(); // clear memory
+
+  // So now we have @@tran_fraud_bitmaps, need to stuff into real records
+  FOREACH (tt,markov_bits) IN @@tran_fraud_bitmaps DO
+    @@bunch_of_transactions += tt;
+  END;
+
+  my_tt = {@@bunch_of_transactions};
+  my_tt = select t1 from my_tt:t1
+    POST-ACCUM
+      UINT bitmap=0,
+      bitmap=@@tran_fraud_bitmaps.get(t1),
+      t1.@f_prev = bitmap&1,
+      t1.@f2_prev = bitmap>>1&1;
+
+
+  PRINT T[/* T.id,*/ T.amount, T.fraud, T.step,
+              T.@my_cust, T.@my_merch, T.@my_cat,
+              T.@cust_sum, T.@cust_max,T.@cust_f_t,
+              T.@merch_sum, T.@merch_max, T.@merch_f_t,
+              T.@cat_sum, T.@cat_max, T.@cat_f_t,
+              T.@f_prev, T.@f2_prev,
+              T.@cust_num_f, T.@cust_num_t,
+              T.@merch_num_f, T.@merch_num_t,
+              T.@cat_num_f, T.@cat_num_t] ;
+
+}
+
+CREATE QUERY get_all_trans_tabular2(INT days_history=1) FOR GRAPH FraudGraph {
+	/*
+	  This is the all transactions in timespan specified with graph expansion
+  Returns a table with some days history aggregated
+  Basic info: tran_id, my_cust, my_merch, my_cat, amount, is_fraud, step
+   Cust history info agg'd for last days inc any others today: cust_avg_amount, cust_max_amount, cust_num_trans, cust_num_frauds
+  Merchant history info agg'd : merch_avg_amount, merch_max_amount, merch_num_trans, merch_num_frauds
+  Category history : cat_avg_amount, cat_max_amount, cat_num_trans, cat_num_frauds
+
+	 */
+  // Maps: day/step value -> aggregate values ready for pulling into transactions
+ GroupByAccum <INT step, SumAccum <DOUBLE> sum_amount, MaxAccum <DOUBLE> max_amount, SumAccum <INT> num_trans, SumAccum <INT> num_frauds> @my_aggs;
+
+  // This is what we'll use to calc outputs per transaction
+  MinAccum <STRING> @my_merch, @my_cat, @my_cust;
+  SumAccum <DOUBLE> @cust_sum, @merch_sum, @cat_sum;
+  MaxAccum <DOUBLE> @cust_max=0, @merch_max=0, @cat_max=0;
+  SumAccum <INT> @cust_num_t, @cust_num_f, @merch_num_t, @merch_num_f, @cat_num_t, @cat_num_f ;
+
+	// TODO: Store maximum day in global stats. As it is maxstep is 179
+  // Probably this would be windowed in the real world i.e. only look at 3 months history
+	AllC = {customer.*};
+  AllC = select c from AllC:c-(customer2transaction)-transaction:t
+  ACCUM
+    c.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllM = {merchant.*};
+  AllM = select m from AllM:m-(transaction2merchant)-transaction:t
+  ACCUM
+    m.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllCat = {category.*};
+  AllCat = select cat from AllCat:cat-(transaction2category)-transaction:t
+  ACCUM
+    cat.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  // OK, so now we go through all transactions, grabbing agg's from related historical records as we go
+  // offset from step in transaction itself from previous day
+
+
+  AllT = {transaction.*};
+
+
+  // Grab cust history
+
+  AllT = select t from AllT:t -(customer2transaction)-customer:c
+    ACCUM // will be one customer per transaction
+      t.@my_cust = c.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@cust_sum += c.@my_aggs.get(step).sum_amount,
+        t.@cust_max += c.@my_aggs.get(step).max_amount,
+        t.@cust_num_t += c.@my_aggs.get(step).num_trans,
+        t.@cust_num_f += c.@my_aggs.get(step).num_frauds
+      END,
+      t.@cust_num_f += t.prev_frauds_cust; // this day frauds, exact history
+
+  AllT = select t from AllT:t -(transaction2merchant)-merchant:m
+    ACCUM
+      t.@my_merch = m.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@merch_sum += m.@my_aggs.get(step).sum_amount,
+        t.@merch_max += m.@my_aggs.get(step).max_amount,
+        t.@merch_num_t +=  m.@my_aggs.get(step).num_trans,
+        t.@merch_num_f += m.@my_aggs.get(step).num_frauds
+      END,
+      t.@merch_num_f += t.prev_frauds_merch; // this day frauds, exact history
+
+  T = select t from AllT:t -(transaction2category)-category:cat
+    ACCUM
+      t.@my_cat = cat.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@cat_sum += cat.@my_aggs.get(step).sum_amount,
+        t.@cat_max += cat.@my_aggs.get(step).max_amount,
+        t.@cat_num_t +=  cat.@my_aggs.get(step).num_trans,
+        t.@cat_num_f += cat.@my_aggs.get(step).num_frauds
+      END,
+      t.@cat_num_f += t.prev_frauds_cat; // this day frauds, exact history
+
+  PRINT T[/* T.id,*/ T.amount, T.fraud, T.step,
+              T.@my_cust, T.@my_merch, T.@my_cat,
+              T.@cust_sum, T.@cust_max, T.@cust_num_t, T.@cust_num_f,
+              T.@merch_sum, T.@merch_max, T.@merch_num_t, T.@merch_num_f,
+              T.@cat_sum, T.@cat_max, T.@cat_num_t, T.@cat_num_f] ;
+
+}
+
+CREATE QUERY get_all_trans_tofile2(INT days_history=1, STRING outfile="/home/tigergraph/output/out22.csv") FOR GRAPH FraudGraph {
+
+  FILE f1 (outfile);
+/*
+	  This is the all transactions in timespan specified with graph expansion
+  Returns a table with some days history aggregated
+  Basic info: tran_id, my_cust, my_merch, my_cat, amount, is_fraud, step
+   Cust history info agg'd for last days inc any others today: cust_avg_amount, cust_max_amount, cust_num_trans, cust_num_frauds
+  Merchant history info agg'd : merch_avg_amount, merch_max_amount, merch_num_trans, merch_num_frauds
+  Category history : cat_avg_amount, cat_max_amount, cat_num_trans, cat_num_frauds
+
+	 */
+  // Maps: day/step value -> aggregate values ready for pulling into transactions
+ GroupByAccum <INT step, SumAccum <DOUBLE> sum_amount, MaxAccum <DOUBLE> max_amount, SumAccum <INT> num_trans, SumAccum <INT> num_frauds> @my_aggs;
+
+  // This is what we'll use to calc outputs per transaction
+  MinAccum <STRING> @my_merch, @my_cat, @my_cust;
+  SumAccum <DOUBLE> @cust_sum, @merch_sum, @cat_sum;
+  MaxAccum <DOUBLE> @cust_max=0, @merch_max=0, @cat_max=0;
+  SumAccum <INT> @cust_num_t, @cust_num_f, @merch_num_t, @merch_num_f, @cat_num_t, @cat_num_f ;
+
+	// TODO: Store maximum day in global stats. As it is maxstep is 179
+  // Probably this would be windowed in the real world i.e. only look at 3 months history
+	AllC = {customer.*};
+  AllC = select c from AllC:c-(customer2transaction)-transaction:t
+  ACCUM
+    c.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllM = {merchant.*};
+  AllM = select m from AllM:m-(transaction2merchant)-transaction:t
+  ACCUM
+    m.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  AllCat = {category.*};
+  AllCat = select cat from AllCat:cat-(transaction2category)-transaction:t
+  ACCUM
+    cat.@my_aggs += (t.step -> t.amount, t.amount, 1, t.fraud);
+
+  // OK, so now we go through all transactions, grabbing agg's from related historical records as we go
+  // offset from step in transaction itself from previous day
+
+
+  AllT = {transaction.*};
+
+
+  // Grab cust history
+
+  AllT = select t from AllT:t -(customer2transaction)-customer:c
+    ACCUM // will be one customer per transaction
+      t.@my_cust = c.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@cust_sum += c.@my_aggs.get(step).sum_amount,
+        t.@cust_max += c.@my_aggs.get(step).max_amount,
+        t.@cust_num_t += c.@my_aggs.get(step).num_trans,
+        t.@cust_num_f += c.@my_aggs.get(step).num_frauds
+      END,
+      t.@cust_num_f += t.prev_frauds_cust; // this day frauds, exact history
+
+  AllT = select t from AllT:t -(transaction2merchant)-merchant:m
+    ACCUM
+      t.@my_merch = m.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@merch_sum += m.@my_aggs.get(step).sum_amount,
+        t.@merch_max += m.@my_aggs.get(step).max_amount,
+        t.@merch_num_t +=  m.@my_aggs.get(step).num_trans,
+        t.@merch_num_f += m.@my_aggs.get(step).num_frauds
+      END,
+      t.@merch_num_f += t.prev_frauds_merch; // this day frauds, exact history
+
+  T = select t from AllT:t -(transaction2category)-category:cat
+    ACCUM
+      t.@my_cat = cat.id,
+      FOREACH step in RANGE[t.step-days_history, t.step-1] DO
+        t.@cat_sum += cat.@my_aggs.get(step).sum_amount,
+        t.@cat_max += cat.@my_aggs.get(step).max_amount,
+        t.@cat_num_t +=  cat.@my_aggs.get(step).num_trans,
+        t.@cat_num_f += cat.@my_aggs.get(step).num_frauds
+      END,
+      t.@cat_num_f += t.prev_frauds_cat; // this day frauds, exact history
+
+   PRINT "v_id,amount,fraud,step,my_cust,my_merch,my_cat,cust_sum,cust_max,cust_num_t,cust_num_f,merch_sum,merch_max,merch_num_t,merch_num_f,cat_sum,cat_max,cat_num_t,cat_num_f" TO_CSV f1;
+
+  PRINT  T.id, T.amount, T.fraud, T.step,
+              T.@my_cust, T.@my_merch, T.@my_cat,
+              T.@cust_sum, T.@cust_max, T.@cust_num_t, T.@cust_num_f,
+              T.@merch_sum, T.@merch_max, T.@merch_num_t, T.@merch_num_f,
+              T.@cat_sum, T.@cat_max, T.@cat_num_t, T.@cat_num_f TO_CSV f1;
+
+  Print T.size() as lines_output;
+
+}
+
+CREATE QUERY get_some_data() FOR GRAPH FraudGraph {
+  /* Quick one for PowerBI integration */
+  typedef tuple <STRING id, INT num_frauds, DOUBLE average_purchase> customer_t;
+
+  ListAccum <customer_t> @@customer_data;
+
+
+  all_c = {customer.*};
+
+  all_c = SELECT cc FROM all_c:cc
+  POST-ACCUM
+    @@customer_data += customer_t(cc.id, cc.num_frauds, cc.average_purchase);
+
+  PRINT @@customer_data;
+}
+
+CREATE QUERY fix_cust_to_merch_edges() FOR GRAPH FraudGraph SYNTAX V2 {
+  /* Write query logic here */
+  // Edges weighted per step
+  // Based on number of times shopped at the same merchants
+  // Calculated per 7 steps (1 week) - can vary to tune
+
+  typedef tuple <STRING ccid, STRING merchid, INT period, INT numt> out_tuple;
+  ListAccum <out_tuple> @@out_lines;
+
+  MinAccum <VERTEX <merchant>> @merchant;
+  MapAccum <VERTEX <merchant>, MapAccum <INT, INT>> @merch_to_period_to_numt;
+
+  print now() as started;
+
+  // Should we delete all edges first?
+  all_c = {customer.*};
+
+ del_c = select cc from all_c:cc -(:e)-merchant
+  ACCUM
+    delete (e);
+
+
+  // Attach merchant to transactions
+   all_t = {transaction.*};
+  all_t = select tt from all_t:tt-()-merchant:mm
+  ACCUM
+    tt.@merchant = mm;
+
+
+  // Now attach list of merchants per step with count to each customer
+  // Doing per week now
+  all_c = select cc from all_c:cc-()-transaction:tt
+  ACCUM
+    cc.@merch_to_period_to_numt += (tt.@merchant->(tt.step/7->1));
+
+
+  all_c = select cc from all_c:cc
+  POST-ACCUM
+    FOREACH (merch,week_to_numt) IN cc.@merch_to_period_to_numt DO
+      FOREACH (week, numt) IN week_to_numt DO
+        IF numt > 1 THEN @@out_lines += out_tuple(cc.id, merch.id, week, numt) END
+      END
+    END;
+
+  // 10 seconds to here
+  // Now insert the EDGE
+  all_c = select cc from all_c:cc
+  ACCUM
+    FOREACH (merch,period_to_numt) in cc.@merch_to_period_to_numt DO
+      INSERT INTO customer_with_merchant VALUES (cc, merch, period_to_numt)
+    END;
+
+
+
+  print now() as finished;
+
+  print @@out_lines.size() as inserted_edges;
+
+}
+
+CREATE QUERY fix_c2c_edges_period(INT block_size=100, INT max_loops=50) FOR GRAPH FraudGraph {
+  /*
+     Assumes cust to merch edges are there (one entry per period)
+    Idea: For each pair of customers, determine weighted jaccard similarity:
+
+    Given a pair of customers:
+    Score = (Sum of minimum C-> M weights)/(Sum of maximum C-> M weights)
+    M''s are the union of merchants attached to by both customers.
+    Where a merchant is only on one C (or the other) then it contributes zero to numerator, and one-sided weight to the denominator.
+
+    Approach is to have a set of merchants per customer, and merge into combined set, following the above logic.
+
+    This logic will occur at one of the customers in a pair (arbitrarily use smaller of the pairs).
+  */
+
+  // General scheme to define product is to go from a customer to merchant, collect all customer weights there.
+  // Then send all these weights back to the customers.
+  // In order to avoid repetition (as well as self-edges) We can send only to "upper half" i.e. id of target is greater
+  // than id of source.
+
+typedef tuple <INT num, INT denom> quotient_t;
+typedef tuple <INT num, INT denom, DOUBLE score> edge_t;
+
+MapAccum <VERTEX<customer>, MapAccum<VERTEX<customer>, MapAccum<INT, edge_t>>> @new_edges; // src->dest->period->(num,denom,score)
+
+MapAccum<VERTEX<merchant>, MapAccum<INT,INT>> @my_merchants2p2int; // periodic merchants
+MapAccum<VERTEX<customer>, SetAccum<INT>> @my_customers2p; // periodic customers
+MapAccum <VERTEX<customer>, MapAccum<VERTEX<merchant>, MapAccum<INT, INT>>> @destcust2merch2p2int;
+MapAccum <VERTEX<merchant>, MapAccum<INT,INT>> @one_or_both_local_m2p2int, @one_or_both_combined_m2p2int; // merchant to period to sum
+
+MapAccum <INT, quotient_t> @p2quotient;
+
+MapAccum <INT, DOUBLE> @edge_map;
+
+SumAccum <INT> @@edges_inserted;
+
+INT heisenbug = 0;
+
+INT my_max_loops = 0;
+my_max_loops = max_loops;
+
+all_cust = {customer.*};
+
+////
+del_cust = select cc from all_cust:cc-(customer_with_customer:e)-customer
+  ACCUM
+    DELETE (e);
+
+source_cust = select cc from all_cust:cc limit block_size;
+
+WHILE source_cust.size() > 0 AND my_max_loops > 0 DO
+  my_max_loops= my_max_loops-1;
+  ///
+
+  // Note, num_t ignored here, for later maybe
+
+  // First, set merchant details on source customers, and get connected merchants
+  connected_merch = select mm from source_cust:cc-(:e)-merchant:mm
+  ACCUM
+    FOREACH (i_period, i_num_t) IN e.map_period_to_num_t DO
+      cc.@my_merchants2p2int += (mm->(i_period->1)) // which merchants are associated with this customer per period, only initial set of customers, using "1" here as is needed later
+    END;
+
+  // Then set all potential destination customer details on connected merchant vertices
+  dest_cust = select cc from connected_merch:mm-(:e)-customer:cc
+  ACCUM
+    FOREACH (i_period, i_num_t) IN e.map_period_to_num_t DO
+      mm.@my_customers2p += (cc->i_period) // all of the customers associated with the connected merchants including sources.
+    END;
+
+  // Now we want to pull all that destination information back onto the source customers
+  source_cust = select sc from source_cust:sc-()-merchant:mm
+  ACCUM
+    FOREACH (i_cust,i_period_set) in mm.@my_customers2p DO // swizzle dimensions so customer -> merchant
+      IF i_cust.id > sc.id THEN  // filter out self and smaller so we only add an edge once, and not to self!
+        FOREACH i_period IN i_period_set DO
+          sc.@destcust2merch2p2int += (i_cust -> (mm->(i_period->1)))
+        END // FOREACH i_period
+      END // IF i_cust.id > sc.id THEN
+    END // FOREACH (i_cust, i_period_set)
+  POST-ACCUM
+   // do jaccard here
+    // per customer pair, merchant, std jaccard, we can add together
+    // merch -> P-> INT - if both on any one period then will be 2, else will be 1
+    FOREACH (i_destcust, i_merch2p2int) IN sc.@destcust2merch2p2int DO // For each target customer, want to find overlap
+      sc.@one_or_both_combined_m2p2int = sc.@my_merchants2p2int+i_merch2p2int, // This is the magic '+' on Maps.
+        // To explain the above magic, '+' on maps inserts keys/values where the keys are new, and accumulates values where they exist.
+        // This works recursively.
+        // So ('x'->1)+('x'->1)+('y'->1) -> ('x'->'2'),('y'->1)
+
+        // ok, now read it out
+      sc.@p2quotient.clear(), // needs to be blank
+      FOREACH (i_merch, i_p2hits) IN sc.@one_or_both_combined_m2p2int DO // iterating the map
+        FOREACH (i_period, i_hits) IN i_p2hits DO
+          IF i_hits == 2 // on this period, both customers link
+            THEN sc.@p2quotient += (i_period->quotient_t(1,1)) // merchant on this period in source and destination
+            ELSE sc.@p2quotient += (i_period->quotient_t(0,1)) // merchant on this period only in one of source or destination.
+          END // IF hits == 2
+        END // FOREACH (i_period, i_hits) IN i_p2hits DO
+      END, // FOREACH (i_merch, i_p2hits) IN cc.@one_or_both_combined_m2p2int DO
+
+
+      sc.@edge_map.clear(), // clean sheet
+      FOREACH (i_period, i_quotient_t) IN sc.@p2quotient DO
+        IF i_quotient_t.num > 0 THEN // only insert where there is at least one merchant overlap
+          sc.@edge_map += (i_period -> 1.0*i_quotient_t.num/i_quotient_t.denom)
+        END
+      END, // FOREACH (i_period, i_quotient_t) IN cc.@p2quotient DO
+      INSERT INTO customer_with_customer VALUES (sc, i_destcust, sc.@edge_map),
+      @@edges_inserted += 1
+
+    END; //FOREACH (i_cust, i_merch_set) IN cc.@customer2merchant2p DO
+
+
+  //print source_cust;
+
+  // Delete all the stuff to save memory and have a clean sheet for next batch of source customers
+    source_cust = select sc from source_cust:sc
+    POST-ACCUM
+      sc.@my_merchants2p2int.clear(),
+      sc.@destcust2merch2p2int.clear(),
+      sc.@one_or_both_combined_m2p2int.clear(),
+      sc.@p2quotient.clear(),
+      sc.@edge_map.clear();
+
+    connected_merch = select mm from connected_merch:mm
+    POST-ACCUM
+      mm.@my_customers2p.clear();
+
+    all_cust = all_cust MINUS source_cust;
+
+    source_cust = select cc from all_cust:cc
+    limit block_size;
+
+    heisenbug = 0;
+    //PRINT source_cust.size();
+
+END; // WHILE
+
+PRINT @@edges_inserted;
+
+}
+
+CREATE QUERY fix_c2c_edges_period_weighted(INT block_size=100, INT max_loops=50, DOUBLE threshold=0.5) FOR GRAPH FraudGraph {
+  /*
+    Parameters: block_size = number of customers processed per loop. 100 customers works well. Very large numbers will use more memory.
+      Max_loops = number of times to run the loop, mostly a debug thing, put in a huge number to cover all (currently <5000 customers so 50 is good)
+      threshold = level at which a link needs to be included
+
+    Assumes cust to merch edges are there (one entry per period)
+    Idea: For each pair of customers, determine weighted jaccard similarity:
+
+    Given a pair of customers:
+    Score = (Sum of minimum C-> M weights)/(Sum of maximum C-> M weights)
+    M''s are the union of merchants attached to by both customers.
+    Where a merchant is only on one C (or the other) then it contributes zero to numerator, and one-sided weight to the denominator.
+
+    Approach is to have a set of merchants per customer, and merge into combined set, following the above logic.
+
+    This logic will occur at one of the customers in a pair (arbitrarily use smaller of the pairs).
+  */
+
+  // General scheme to define product is to go from a customer to merchant, collect all customer weights there.
+  // Then send all these weights back to the customers.
+  // In order to avoid repetition (as well as self-edges) We can send only to "upper half" i.e. id of target is greater
+  // than id of source.
+
+typedef tuple <INT source_num_t, INT dest_num_t> source_dest_t;
+typedef tuple <INT numerator, INT denom> quotient_t;
+typedef tuple <INT numerator, INT denom, DOUBLE score> edge_t;
+
+//MapAccum <VERTEX<customer>, MapAccum<VERTEX<customer>, MapAccum<INT, edge_t>>> @new_edges; // src->dest->period->(num,denom,score)
+
+MapAccum<VERTEX<merchant>, MapAccum<INT,source_dest_t>> @my_merchants2p2sdt; // periodic merchants
+MapAccum<VERTEX<customer>, MapAccum<INT,source_dest_t>> @my_customers2p2sdt; // periodic customers
+MapAccum <VERTEX<customer>, MapAccum<VERTEX<merchant>, MapAccum<INT, source_dest_t>>> @destcust2merch2p2sdt;
+MapAccum <VERTEX<merchant>, MapAccum<INT,source_dest_t>> @one_or_both_local_m2p2sdt, @one_or_both_combined_m2p2sdt; // merchant to period to sum
+
+MapAccum <INT, quotient_t> @p2quotient;
+
+MapAccum <INT, DOUBLE> @edge_map;
+
+SumAccum <INT> @@edges_inserted;
+
+ListAccum <STRING> @@debug;
+
+INT my_max_loops = 0;
+
+INT heisenbug=0;
+
+my_max_loops = max_loops;
+
+all_cust = {customer.*};
+
+////
+del_cust = select cc from all_cust:cc-(customer_with_customer:e)-customer
+  ACCUM
+    DELETE (e);
+
+source_cust = select cc from all_cust:cc limit block_size;
+
+WHILE source_cust.size() > 0 AND my_max_loops > 0 DO
+  my_max_loops= my_max_loops-1;
+
+  // First, set merchant details on source customers, and get connected merchants
+  // Source side
+  connected_merch = select mm from source_cust:cc-(:e)-merchant:mm
+  ACCUM
+    FOREACH (i_period, i_num_t) IN e.map_period_to_num_t DO
+      cc.@my_merchants2p2sdt += (mm->(i_period->source_dest_t(i_num_t, 0))) // which merchants are associated with this customer per period, only initial set of customers, store source num_t
+    END;
+
+  // Then set all potential destination customer details on connected merchant vertices
+  // Destination side
+  dest_cust = select cc from connected_merch:mm-(:e)-customer:cc
+  ACCUM
+    FOREACH (i_period, i_num_t) IN e.map_period_to_num_t DO
+      mm.@my_customers2p2sdt += (cc->(i_period->source_dest_t(0, i_num_t))) // all of the customers associated with the connected merchants, store destination num_t
+    END;
+
+  // Now we want to pull all that destination information back onto the source customers
+  source_cust = select sc from source_cust:sc-()-merchant:mm
+  ACCUM
+    FOREACH (i_cust,i_period2sdt) in mm.@my_customers2p2sdt DO // swizzle dimensions so customer -> merchant
+      IF i_cust.id > sc.id THEN  // filter out self and smaller so we only add an edge once, and not to self!
+        sc.@destcust2merch2p2sdt += (i_cust -> (mm->i_period2sdt))
+      END // IF i_cust.id > sc.id THEN
+    END // FOREACH (i_cust, i_period2sdt)
+  POST-ACCUM
+    INT i_min=0, INT i_max=0, DOUBLE result=0.0,
+   // do weighted jaccard here
+    FOREACH (i_destcust, i_merch2p2sdt) IN sc.@destcust2merch2p2sdt DO // For each target customer, want to find overlap
+      sc.@one_or_both_combined_m2p2sdt = sc.@my_merchants2p2sdt+i_merch2p2sdt, // This is the magic '+' on Maps.
+        // Map '+' accumulates recursively where keys coincide, else inserts key and value. THus is a recursive tree merge with accumulation at the leaves.
+      sc.@p2quotient.clear(), // needs to be blank
+      FOREACH (i_merch, i_p2sdt) IN sc.@one_or_both_combined_m2p2sdt DO // iterating the map
+        FOREACH (i_period, i_sdt) IN i_p2sdt DO
+          IF i_sdt.source_num_t < i_sdt.dest_num_t // order the two numbers
+            THEN i_min = i_sdt.source_num_t, i_max=i_sdt.dest_num_t
+            ELSE i_max = i_sdt.source_num_t, i_min=i_sdt.dest_num_t
+          END,
+          IF i_min > 0 // on this period, both customers link, so min/max
+            THEN sc.@p2quotient += (i_period->quotient_t(i_min,i_max)) // if this is a common merchant, add min to top and max to bottom
+            ELSE sc.@p2quotient += (i_period->quotient_t(0,i_max)) // if not a common merchant then only add max to bottom
+          END // IF i_min > 0
+        END // FOREACH (i_period, i_sdt) IN i_p2sdt DO
+      END, //  FOREACH (i_merch, i_p2sdt) IN sc.@one_or_both_combined_m2p2sdt DO
+
+
+      sc.@edge_map.clear(), // clean sheet
+      FOREACH (i_period, i_quotient_t) IN sc.@p2quotient DO
+        IF i_quotient_t.numerator > 0 THEN // only insert where there is at least one merchant overlap
+          result = 1.0*i_quotient_t.numerator/i_quotient_t.denom,
+          IF result > threshold THEN sc.@edge_map += (i_period -> result) END // this is the min/max.
+        END
+      END, // FOREACH (i_period, i_quotient_t) IN cc.@p2quotient DO
+      IF sc.@edge_map.size() > 0 THEN
+        INSERT INTO customer_with_customer VALUES (sc, i_destcust, sc.@edge_map),
+        @@edges_inserted += 1
+      END
+    END; //FOREACH (i_cust, i_merch_set) IN cc.@customer2merchant2p DO
+
+
+    //print source_cust;
+
+  // Delete all the stuff to save memory and have a clean sheet for next batch of source customers
+    source_cust = select sc from source_cust:sc
+    POST-ACCUM
+      sc.@my_merchants2p2sdt.clear(),
+      sc.@destcust2merch2p2sdt.clear(),
+      sc.@one_or_both_combined_m2p2sdt.clear(),
+      sc.@p2quotient.clear(),
+      sc.@edge_map.clear();
+
+    connected_merch = select mm from connected_merch:mm
+    POST-ACCUM
+      mm.@my_customers2p2sdt.clear();
+
+    all_cust = all_cust MINUS source_cust;
+
+    source_cust = select cc from all_cust:cc
+    limit block_size;
+
+    heisenbug=0; // Due to heisenbug with LIMIT query (GF-1543) , need some statement here.
+
+   // PRINT all_cust.size(), source_cust;
+
+END; // WHILE
+
+PRINT @@edges_inserted;
+
+}
+
+CREATE QUERY clear_rank_fraud(INT max_dist=10) FOR GRAPH FraudGraph {
+   /*
+     Set fraud rank (probability).
+     Generally, depends on history, I'm not comfortable with setting based on future values since
+     that may create a subtle leakage from future into the past.
+     Global value though is probably consistent for all time as an average.
+   */
+  SumAccum <DOUBLE> @@base_probability;
+
+  allG = {global_stats.*};
+
+  allT = {transaction.*};
+
+  // Set base-risk
+  allG = select gg from allG:gg
+    POST-ACCUM
+      @@base_probability += 1.0*gg.num_frauds/gg.num_trans;
+
+  allT = select tt from allT:tt
+  POST-ACCUM tt.rank_fraud=@@base_probability,
+    tt.dist_fraud=max_dist;
+
+  PRINT "clear_rank_fraud works!";
+}
+
+INSTALL QUERY get_all_trans_tabular3
