@@ -1,5 +1,7 @@
 # TigerGraph misc stuff
 
+**NOTE:** I will not update my TG stuff any more, my contract with them is terminated and I will focus on some other areas of technology. TigerGraph is (was!) great technology but IMHO some management decisions brought it where it is now. Good luck TigerGraph!  
+
 **About**
 Here you will find a script to install different TigerGraph workshops:
 
